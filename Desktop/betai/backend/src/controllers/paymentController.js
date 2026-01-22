@@ -55,7 +55,7 @@ const PLAN_CONFIG = {
   // Coin plans (amount in XAF, coins to award)
   'coins_500': {
     type: 'coins',           // Still 'coins' type
-    amount: 100,             // Final price after changes
+    amount: 500,             // Final price after changes
     originalAmount: 800,     // Original price
     coins: 500,
     name: '500 Coins + 1 Day Access',  // Updated name

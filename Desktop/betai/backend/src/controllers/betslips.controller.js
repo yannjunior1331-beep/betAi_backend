@@ -1,12 +1,14 @@
-import { GoogleGenAI } from "@google/genai";
+// Import OpenAI SDK for DeepSeek
+import OpenAI from "openai";
 import Fixture from '../models/fixtures.js';
 import User from '../models/user.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Initialize the GoogleGenAI client
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+// Initialize the DeepSeek client
+const openai = new OpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
 // Constants for credit system
@@ -75,13 +77,13 @@ const checkAndDeductCredits = async (userId, isAdmin = false) => {
 };
 
 /**
- * Generate betslips with Gemini AI
+ * Generate betslips with DeepSeek AI
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 export const generateBetslips = async (req, res) => {
   try {
-    console.log("🤖 Generating betslips with Gemini...");
+    console.log("🤖 Generating betslips with DeepSeek...");
     
     // Check authentication
     if (!req.userId) {
@@ -197,7 +199,7 @@ export const generateBetslips = async (req, res) => {
     const fixturesJson = JSON.stringify(minimalFixtures);
     console.log(`📦 Fixtures data size: ${fixturesJson.length} characters`);
 
-    // 5️⃣ Build optimized prompt for Gemini
+    // 5️⃣ Build optimized prompt for DeepSeek
     const prompt = `TU ES UN EXPERT EN PARIS SPORTIFS FRANÇAIS. 
     TRÈS IMPORTANT : TOUS LES MARCHÉS DOIVENT ÊTRE EN FRANÇAIS SEULEMENT.
 
@@ -247,19 +249,21 @@ export const generateBetslips = async (req, res) => {
     - Format exact : {"billetsDePari": [{"coteTotale": X, "paris": [{"match": "...", "marche": "...", "cote": X, "confiance": "X%"}]}]}
     - Génère exactement 5 billets`;
 
-    // 6️⃣ Send to Gemini API
+    // 6️⃣ Send to DeepSeek API
     let response;
     try {
-      response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 3000,
-        }
+      response = await openai.chat.completions.create({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: "You are an expert French sports betting analyst. Always respond in valid JSON format without any additional text." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 3000,
+        response_format: { type: "json_object" } // Force JSON response
       });
     } catch (aiError) {
-      console.error("❌ Gemini API error:", aiError);
+      console.error("❌ DeepSeek API error:", aiError);
       
       // Refund credits on AI error
       if (!req.user?.isAdmin || !ADMIN_EXEMPT) {
@@ -275,7 +279,7 @@ export const generateBetslips = async (req, res) => {
     }
 
     // 7️⃣ Parse AI response
-    const rawOutput = response.text;
+    const rawOutput = response.choices[0]?.message?.content;
 
     if (!rawOutput) {
       // Refund credits if no AI response
@@ -306,26 +310,39 @@ export const generateBetslips = async (req, res) => {
     } catch (err) {
       console.error("❌ Invalid JSON from AI:", err.message);
       
-      // Refund credits on invalid JSON
-      if (!req.user?.isAdmin || !ADMIN_EXEMPT) {
-        await refundCredits(req.userId, GENERATION_COST);
+      // Try to fix common JSON issues
+      try {
+        let fixedJson = jsonResponse
+          .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3')
+          .replace(/'/g, '"');
+        betslips = JSON.parse(fixedJson);
+        console.log("✅ Successfully parsed after cleaning");
+      } catch (secondErr) {
+        console.error("❌ Failed to parse even after cleaning");
+        
+        // Refund credits on invalid JSON
+        if (!req.user?.isAdmin || !ADMIN_EXEMPT) {
+          await refundCredits(req.userId, GENERATION_COST);
+        }
+        
+        return res.status(500).json({ 
+          success: false,
+          error: "AI did not return valid JSON. Please try again.",
+          betslips: [],
+          credits: await getUserCredits(req.userId)
+        });
       }
-      
-      return res.status(500).json({ 
-        success: false,
-        error: "AI did not return valid JSON. Please try again.",
-        betslips: [],
-        credits: await getUserCredits(req.userId)
-      });
     }
 
     // 8️⃣ Extract billetsDePari from response
     let billetsDePari = [];
     
     if (betslips.billetsDePari && Array.isArray(betslips.billetsDePari)) {
-      billetsDePari = betslips.billetsDePari.slice(0, 3);
+      billetsDePari = betslips.billetsDePari.slice(0, 5); // Take up to 5 as requested
     } else if (Array.isArray(betslips)) {
-      billetsDePari = betslips.slice(0, 3);
+      billetsDePari = betslips.slice(0, 5);
+    } else if (betslips.betslips && Array.isArray(betslips.betslips)) {
+      billetsDePari = betslips.betslips.slice(0, 5);
     } else {
       console.error("❌ Unexpected response structure:", Object.keys(betslips));
       
