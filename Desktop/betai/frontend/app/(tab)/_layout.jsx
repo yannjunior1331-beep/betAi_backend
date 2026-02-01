@@ -9,6 +9,7 @@ export default function TabLayout() {
       <Tabs
        
        screenOptions={{
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: theme.colors.cardBackground,
           borderTopColor: theme.colors.border,
@@ -24,26 +25,27 @@ export default function TabLayout() {
         },
       }}
     >
-
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Matches',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      
        <Tabs.Screen
         name="betslip"
         options={{
-          title: 'Betslip',
+          title: 'Coupons',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="ticket" size={size} color={color} />
           ),
         }}
       />
 
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Matches',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="football" size={size} color={color} />
-          ),
-        }}
-      />
+      
       <Tabs.Screen
         name="profile"
         options={{

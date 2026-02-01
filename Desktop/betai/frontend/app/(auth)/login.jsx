@@ -92,7 +92,7 @@ const LoginScreen = () => {
           </View>
           <Text style={styles.title}>{t('login.welcomeBack', 'Welcome Back')}</Text>
           <Text style={styles.subtitle}>
-            {t('login.signInToAccount', 'Sign in to your FootGpt account')}
+            {t('login.signInToAccount', 'Sign in to your footai account')}
           </Text>
         </View>
 

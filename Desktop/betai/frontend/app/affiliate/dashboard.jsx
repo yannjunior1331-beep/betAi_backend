@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Animated,
+  Platform,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -37,6 +39,12 @@ const AffiliateDashboardScreen = () => {
   const [email, setEmail] = useState('');
   const [countryCode, setCountryCode] = useState('+237');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  
+  // Notification states
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success');
+  const notificationAnim = useRef(new Animated.Value(0)).current;
 
   // Get language state from i18n
   const isFrench = i18n.language === 'fr';
@@ -65,6 +73,30 @@ const AffiliateDashboardScreen = () => {
     { code: '+263', name: isFrench ? 'Zimbabwe' : 'Zimbabwe', flag: '🇿🇼' },
   ];
 
+  // Handle notification display
+  const showNotificationMessage = (message, type = 'success') => {
+    setNotificationMessage(message);
+    setNotificationType(type);
+    setShowNotification(true);
+    
+    // Animate in
+    Animated.sequence([
+      Animated.timing(notificationAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(4000),
+      Animated.timing(notificationAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowNotification(false);
+    });
+  };
+
   // Fetch affiliate stats
   const fetchAffiliateStats = async () => {
     try {
@@ -85,7 +117,7 @@ const AffiliateDashboardScreen = () => {
       
       // Get token from AsyncStorage
       console.log('🟢 Getting token from AsyncStorage...');
-      const token = await AsyncStorage.getItem('@FootGpt_token');
+      const token = await AsyncStorage.getItem('@footai_token');
       console.log('🟢 Token exists:', !!token);
       console.log('🟢 Token length:', token?.length);
       
@@ -96,7 +128,7 @@ const AffiliateDashboardScreen = () => {
         return;
       }
       
-      console.log('📡 Calling API: http://192.168.55.215:3000/api/affiliate/stats');
+      console.log('📡 Calling API: https://betai-backend-uxt5.onrender.com/api/affiliate/stats');
       
       // Test the API endpoint first with a simple fetch
       console.log('🟢 Testing network connectivity...');
@@ -107,7 +139,7 @@ const AffiliateDashboardScreen = () => {
       );
       
       // Make the API call
-      const fetchPromise = fetch('http://192.168.55.215:3000/api/affiliate/stats', {
+      const fetchPromise = fetch('https://betai-backend-uxt5.onrender.com/api/affiliate/stats', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -198,7 +230,7 @@ const AffiliateDashboardScreen = () => {
           affiliateTier: backendStats.affiliateTier || 'basic',
           commissionRate: backendStats.commissionRate || '10%',
           nextPayoutDate: backendStats.nextPayoutDate || t('affiliate.notScheduled'),
-          referralLink: backendStats.referralLink || `https://FootGpt.com/register?ref=${backendStats.promoCode || 'N/A'}`,
+          referralLink: backendStats.referralLink || `https://footai.com/register?ref=${backendStats.promoCode || 'N/A'}`,
           
           // Keep backend data for debugging
           _backendData: backendStats,
@@ -272,7 +304,7 @@ const AffiliateDashboardScreen = () => {
                 affiliateTier: user?.affiliateTier || 'basic',
                 commissionRate: `${user?.affiliateCommission || 10}%`,
                 nextPayoutDate: t('affiliate.notScheduled'),
-                referralLink: `https://FootGpt.com/register?ref=${user?.promoCode || 'N/A'}`,
+                referralLink: `https://footai.com/register?ref=${user?.promoCode || 'N/A'}`,
               });
               
               // Create mock referrals from user data
@@ -307,7 +339,7 @@ const AffiliateDashboardScreen = () => {
   const fetchReferrals = async () => {
     console.log('🟢 fetchReferrals called');
     try {
-      const token = await AsyncStorage.getItem('@FootGpt_token');
+      const token = await AsyncStorage.getItem('@footai_token');
       
       if (!token) {
         console.log('🟡 No token, returning empty referrals');
@@ -316,7 +348,7 @@ const AffiliateDashboardScreen = () => {
       }
       
       console.log('📡 Calling referrals API...');
-      const response = await fetch('http://192.168.55.215:3000/api/affiliate/referrals', {
+      const response = await fetch('https://betai-backend-uxt5.onrender.com/api/affiliate/referrals', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -408,28 +440,40 @@ const AffiliateDashboardScreen = () => {
     setShowCashoutModal(true);
   };
 
-  // Process cashout with Formspree
+  // Process cashout with Formspree - UPDATED WITH NOTIFICATION SYSTEM
   const processCashout = async () => {
     try {
       // Validate contact information
       if (cashoutMethod === 'mobile' && !mobileNumber) {
-        Alert.alert(t('affiliate.errors.validationError'), t('affiliate.errors.enterMobileNumber'));
+        const errorMessage = t('affiliate.errors.enterMobileNumber');
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Alert.alert(t('affiliate.errors.validationError'), errorMessage);
+        } else {
+          showNotificationMessage(errorMessage, 'error');
+        }
         return;
       }
       
       if (cashoutMethod === 'paypal' && !email) {
-        Alert.alert(t('affiliate.errors.validationError'), t('affiliate.errors.enterPayPalEmail'));
+        const errorMessage = t('affiliate.errors.enterPayPalEmail');
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Alert.alert(t('affiliate.errors.validationError'), errorMessage);
+        } else {
+          showNotificationMessage(errorMessage, 'error');
+        }
         return;
       }
 
       if (!cashoutAmount || parseFloat(cashoutAmount) < (stats?.minimumPayout || 50)) {
-        Alert.alert(
-          t('affiliate.errors.validationError'),
-          t('affiliate.errors.minimumCashout', { 
-            min: stats?.minimumPayout || 50,
-            needed: (stats?.minimumPayout || 50) - parseFloat(cashoutAmount || 0)
-          })
-        );
+        const errorMessage = t('affiliate.errors.minimumCashout', { 
+          min: stats?.minimumPayout || 50,
+          needed: (stats?.minimumPayout || 50) - parseFloat(cashoutAmount || 0)
+        });
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Alert.alert(t('affiliate.errors.validationError'), errorMessage);
+        } else {
+          showNotificationMessage(errorMessage, 'error');
+        }
         return;
       }
 
@@ -469,7 +513,7 @@ const AffiliateDashboardScreen = () => {
       
       // Formspree configuration
       formData.append('_replyto', user?.email || 'no-email@example.com');
-      formData.append('_subject', `[FootGpt] ${t('affiliate.requestCashoutModal.emailSubject', { username: user?.username || 'Utilisateur' })}`);
+      formData.append('_subject', `[footai] ${t('affiliate.requestCashoutModal.emailSubject', { username: user?.username || 'Utilisateur' })}`);
       
       console.log('📤 Sending cashout request to Formspree...');
       
@@ -488,25 +532,47 @@ const AffiliateDashboardScreen = () => {
         const data = await response.json();
         console.log('✅ Formspree success:', data);
         
-        // Show success alert
-        Alert.alert(
-          t('affiliate.errors.cashoutRequestSubmitted'),
-          t('affiliate.errors.cashoutSuccess', { amount: cashoutAmount }),
-          [
-            {
-              text: t('common.ok'),
-              onPress: () => {
-                setShowCashoutModal(false);
-                // Reset fields
-                setCashoutAmount('');
-                setMobileNumber('');
-                setEmail('');
-                // Refresh stats
-                fetchAffiliateStats();
+        // UPDATED: Show success notification with consistent message
+        const successMessage = t('affiliate.requestCashoutModal.successMessage', { 
+          amount: cashoutAmount,
+          method: t(`affiliate.requestCashoutModal.${cashoutMethod}`)
+        });
+        
+        // On mobile, show alert with options
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Alert.alert(
+            t('affiliate.errors.cashoutRequestSubmitted'),
+            successMessage,
+            [
+              {
+                text: t('common.ok'),
+                onPress: () => {
+                  setShowCashoutModal(false);
+                  // Reset fields
+                  setCashoutAmount('');
+                  setMobileNumber('');
+                  setEmail('');
+                  // Refresh stats
+                  fetchAffiliateStats();
+                },
               },
-            },
-          ]
-        );
+            ]
+          );
+        } else {
+          // On web, show notification and auto-close modal
+          showNotificationMessage(successMessage, 'success');
+          
+          // Close modal after delay
+          setTimeout(() => {
+            setShowCashoutModal(false);
+            // Reset fields
+            setCashoutAmount('');
+            setMobileNumber('');
+            setEmail('');
+            // Refresh stats
+            fetchAffiliateStats();
+          }, 1500);
+        }
         
       } else {
         throw new Error(`HTTP ${response.status}`);
@@ -515,11 +581,13 @@ const AffiliateDashboardScreen = () => {
     } catch (error) {
       console.error('❌ Cashout error:', error);
       
-      // Show error alert
-      Alert.alert(
-        t('common.error'),
-        t('affiliate.errors.cashoutError')
-      );
+      // Show error notification
+      const errorMessage = t('affiliate.errors.cashoutError');
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        Alert.alert(t('common.error'), errorMessage);
+      } else {
+        showNotificationMessage(errorMessage, 'error');
+      }
       
     } finally {
       setProcessingCashout(false);
@@ -622,6 +690,54 @@ const AffiliateDashboardScreen = () => {
     return centralAfricanCountries.find(country => country.code === countryCode);
   };
 
+  // Render notification component
+  const renderNotification = () => {
+    if (!showNotification) return null;
+    
+    const backgroundColor = notificationType === 'success' ? '#34C759' : 
+                           notificationType === 'error' ? '#FF3B30' : 
+                           '#007AFF';
+    
+    const iconName = notificationType === 'success' ? 'checkmark-circle' : 
+                    notificationType === 'error' ? 'alert-circle' : 
+                    'information-circle';
+    
+    return (
+      <Animated.View 
+        style={[
+          styles.notification,
+          { 
+            backgroundColor,
+            opacity: notificationAnim,
+            transform: [
+              {
+                translateY: notificationAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <Ionicons name={iconName} size={20} color="#FFFFFF" />
+        <Text style={styles.notificationText}>{notificationMessage}</Text>
+        <TouchableOpacity 
+          onPress={() => {
+            Animated.timing(notificationAnim, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }).start(() => setShowNotification(false));
+          }}
+          style={styles.notificationClose}
+        >
+          <Ionicons name="close" size={16} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
   // Loading state
   if (authLoading || loading) {
     return (
@@ -666,6 +782,9 @@ const AffiliateDashboardScreen = () => {
           />
         }
       >
+        {/* Notification */}
+        {renderNotification()}
+        
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
@@ -771,7 +890,6 @@ const AffiliateDashboardScreen = () => {
             <View style={[styles.earningCard, styles.pendingPayout]}>
               <Text style={styles.earningCardLabel}>{t('affiliate.availableForPayout')}</Text>
               <Text style={styles.earningCardValue}>
-                {/* ✅ FIXED: Show todayEarnings (available amount) */}
                 ${stats?.todayEarnings?.toFixed(2) || '0.00'}
               </Text>
               <Text style={styles.earningCardSubtext}>
@@ -1883,6 +2001,30 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: theme.typography.body.fontSize,
     fontWeight: '600',
+  },
+  // ✅ ADDED: Notification styles
+  notification: {
+    position: 'absolute',
+    top: 100,
+    left: theme.spacing.lg,
+    right: theme.spacing.lg,
+    borderRadius: theme.borderRadius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    gap: 10,
+    zIndex: 1000,
+    ...theme.shadows.medium,
+  },
+  notificationText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  notificationClose: {
+    padding: 4,
   },
 });
 

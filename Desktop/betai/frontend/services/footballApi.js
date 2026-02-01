@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.55.215:3000/api/football'; // your backend
+const API_BASE_URL = 'https://betai-backend-uxt5.onrender.com/api/football'; // your backend
 
 // Fetch all upcoming matches (existing)
 export const fetchMatches = async () => {

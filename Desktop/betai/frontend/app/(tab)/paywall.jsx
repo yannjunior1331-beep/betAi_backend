@@ -24,7 +24,7 @@ import '../../utils/i18n';
 const { width } = Dimensions.get('window');
 
 // API Base URL
-const API_BASE_URL = 'https://tianna-deteriorative-shela.ngrok-free.dev';
+const API_BASE_URL = 'https://betai-backend-uxt5.onrender.com';
 
 // African countries
 const SUPPORTED_COUNTRIES = [
@@ -154,14 +154,14 @@ const PaywallScreen = () => {
 
 
 // Inside component
-// useFocusEffect(
-//   React.useCallback(() => {
-//     if (user && refreshUser) {
-//       console.log('💰 Paywall focused - refreshing credits');
-//       refreshUser();
-//     }
-//   }, [user, refreshUser])
-// );
+useFocusEffect(
+  React.useCallback(() => {
+    if (user && refreshUser) {
+      console.log('💰 Paywall focused - refreshing credits');
+      refreshUser();
+    }
+  }, [user, refreshUser])
+);
 
   useEffect(() => {
     if (user) {

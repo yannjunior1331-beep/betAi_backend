@@ -7,12 +7,12 @@ const AuthContext = createContext({});
 // API Configuration
 const API_CONFIG = {
   development: {
-    android: 'http://192.168.55.215:3000/api',
-    ios: 'http://192.168.55.215:3000/api',
-    web: 'http://localhost:3000/api',
+    android: 'https://betai-backend-uxt5.onrender.com/api',
+    ios: 'https://betai-backend-uxt5.onrender.com/api',
+    web: 'https://betai-backend-uxt5.onrender.com/api',
   },
   production: {
-    default: 'https://your-production-api.com/api',
+    default: 'https://betai-backend-uxt5.onrender.com/api',
   },
 };
 
@@ -45,7 +45,7 @@ const apiFetch = async (endpoint, options = {}) => {
   };
 
   // Add token to headers if available
-  const token = await AsyncStorage.getItem('@FootGpt_token');
+  const token = await AsyncStorage.getItem('@footai_token');
   if (token) {
     defaultHeaders['Authorization'] = `Bearer ${token}`;
   }
@@ -190,28 +190,64 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loadStoredAuth = async () => {
-    try {
-      const [storedToken, storedUser] = await Promise.all([
-        AsyncStorage.getItem('@FootGpt_token'),
-        AsyncStorage.getItem('@FootGpt_user'),
-      ]);
+const loadStoredAuth = async () => {
+  try {
+    const [storedToken, storedUser] = await Promise.all([
+      AsyncStorage.getItem('@footai_token'),
+      AsyncStorage.getItem('@footai_user'),
+    ]);
 
-      if (storedToken && storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(parsedUser);
-        console.log('✅ Loaded stored auth data with betslips:', parsedUser?.betslips?.length || 0);
-      } else {
-        console.log('ℹ️ No stored auth data found');
-      }
-    } catch (err) {
-      console.error('Failed to load auth data:', err);
-      setLoginError('Failed to load authentication data');
-      // Clear corrupted data
-      await AsyncStorage.multiRemove(['@FootGpt_token', '@FootGpt_user']);
+    if (storedToken && storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      
+      // 1. Set token and user immediately (fast app start)
+      setToken(storedToken);
+      setUser(parsedUser);
+      console.log('✅ Loaded stored auth data with betslips:', parsedUser?.betslips?.length || 0);
+      
+      // 2. CRITICAL FIX: Fetch fresh data from backend (fixes credit mismatch)
+      // Do this in background after app loads
+      setTimeout(async () => {
+        try {
+          console.log('🔄 Fetching fresh credits from backend...');
+          const response = await fetch(`${API_URL}/users/me`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${storedToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+              console.log(`✅ Credits: ${parsedUser.credits} (stored) → ${data.user.credits} (backend)`);
+              
+              // Update user with fresh credits
+              const updatedUser = {
+                ...parsedUser,
+                credits: data.user.credits || parsedUser.credits,
+              };
+              
+              setUser(updatedUser);
+              await AsyncStorage.setItem('@footai_user', JSON.stringify(updatedUser));
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Could not refresh credits:', error.message);
+        }
+      }, 1000); // Wait 1 second after app loads
+      
+    } else {
+      console.log('ℹ️ No stored auth data found');
     }
-  };
+  } catch (err) {
+    console.error('Failed to load auth data:', err);
+    setLoginError('Failed to load authentication data');
+    // Clear corrupted data
+    await AsyncStorage.multiRemove(['@footai_token', '@footai_user']);
+  }
+};
 
   // ✅ Enhanced Register function - ensures betslips are included
   const register = async (username, email, password, referralCode = '') => {
@@ -242,8 +278,8 @@ export const AuthProvider = ({ children }) => {
 
         // Store auth data
         await Promise.all([
-          AsyncStorage.setItem('@FootGpt_token', result.data.token),
-          AsyncStorage.setItem('@FootGpt_user', JSON.stringify(userData)),
+          AsyncStorage.setItem('@footai_token', result.data.token),
+          AsyncStorage.setItem('@footai_user', JSON.stringify(userData)),
         ]);
         
         // Update state
@@ -287,8 +323,8 @@ export const AuthProvider = ({ children }) => {
 
         // Store auth data
         await Promise.all([
-          AsyncStorage.setItem('@FootGpt_token', result.data.token),
-          AsyncStorage.setItem('@FootGpt_user', JSON.stringify(userData)),
+          AsyncStorage.setItem('@footai_token', result.data.token),
+          AsyncStorage.setItem('@footai_user', JSON.stringify(userData)),
         ]);
         
         // Update state
@@ -358,7 +394,7 @@ const becomeAffiliate = async (promoCode) => {
       
       // Store updated user
       setUser(updatedUser);
-      await AsyncStorage.setItem('@FootGpt_user', JSON.stringify(updatedUser));
+      await AsyncStorage.setItem('@footai_user', JSON.stringify(updatedUser));
       
       console.log('✅ User data saved to AsyncStorage');
       return { success: true, user: updatedUser };
@@ -401,7 +437,7 @@ const validatePromoCode = async (promoCode) => {
       }
       
       // Clear local storage
-      await AsyncStorage.multiRemove(['@FootGpt_token', '@FootGpt_user']);
+      await AsyncStorage.multiRemove(['@footai_token', '@footai_user']);
       
       // Reset state
       setToken(null);
@@ -440,7 +476,7 @@ const validatePromoCode = async (promoCode) => {
         };
 
         // Update stored user data
-        await AsyncStorage.setItem('@FootGpt_user', JSON.stringify(userData));
+        await AsyncStorage.setItem('@footai_user', JSON.stringify(userData));
         setUser(userData);
         
         console.log('✅ Profile fetched with betslips:', userData.betslips.length);
@@ -472,7 +508,7 @@ const validatePromoCode = async (promoCode) => {
         };
         
         setUser(updatedUser);
-        await AsyncStorage.setItem('@FootGpt_user', JSON.stringify(updatedUser));
+        await AsyncStorage.setItem('@footai_user', JSON.stringify(updatedUser));
         
         console.log('✅ Betslips fetched:', result.data.betslips.length);
         return { success: true, betslips: result.data.betslips };
@@ -594,7 +630,7 @@ const saveBetslip = async (betslipData) => {
       };
       
       setUser(updatedUser);
-      await AsyncStorage.setItem('@FootGpt_user', JSON.stringify(updatedUser));
+      await AsyncStorage.setItem('@footai_user', JSON.stringify(updatedUser));
       
       console.log('✅ Betslip saved successfully with full prediction data:', result.data.betslip);
       return { success: true, betslip: result.data.betslip };
@@ -658,7 +694,7 @@ const saveBetslip = async (betslipData) => {
         };
         
         setUser(updatedUser);
-        await AsyncStorage.setItem('@FootGpt_user', JSON.stringify(updatedUser));
+        await AsyncStorage.setItem('@footai_user', JSON.stringify(updatedUser));
         
         console.log('✅ Betslip removed:', betslipId);
         return { success: true };
@@ -680,7 +716,7 @@ const saveBetslip = async (betslipData) => {
       betslips: updates.betslips !== undefined ? updates.betslips : user?.betslips || [],
     };
     setUser(updatedUser);
-    AsyncStorage.setItem('@FootGpt_user', JSON.stringify(updatedUser));
+    AsyncStorage.setItem('@footai_user', JSON.stringify(updatedUser));
   };
 
   // ✅ Update betslips locally (convenience function)
@@ -734,9 +770,18 @@ const saveBetslip = async (betslipData) => {
     return connectionTest.connected;
   };
 
-  const isSubscriptionValid = () => {
-  if (!user?.subscriptionEndDate) return false;
-  return new Date(user.subscriptionEndDate) > new Date();
+ const isSubscriptionValid = () => {
+  // Check if user has any active subscription (not 'none')
+  if (user?.subscription && user.subscription !== 'none') {
+    // Also check if subscription end date is valid if it exists
+    if (user?.subscriptionEndDate) {
+      return new Date(user.subscriptionEndDate) > new Date();
+    }
+    // If no end date but has subscription type, assume it's active
+    return true;
+  }
+  
+  return false;
 };
 
 const hasFullAccess = () => {
@@ -766,7 +811,7 @@ const refreshUser = async () => {
       // Update state
       setUser(updatedUser);
       // Update storage
-      await AsyncStorage.setItem('@FootGpt_user', JSON.stringify(updatedUser));
+      await AsyncStorage.setItem('@footai_user', JSON.stringify(updatedUser));
       
       return { success: true, user: updatedUser };
     } else {

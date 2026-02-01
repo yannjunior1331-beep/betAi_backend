@@ -11,7 +11,7 @@ const AffiliateLayout = () => {
         name="register"
         options={{
           headerShown: false,
-          presentation: 'modal',
+          // presentation: 'modal',
         }}
       />
       <Stack.Screen

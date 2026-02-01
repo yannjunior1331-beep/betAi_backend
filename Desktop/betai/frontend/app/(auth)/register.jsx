@@ -91,7 +91,7 @@ const RegisterScreen = () => {
     setIsLoading(false);
 
     if (result.success) {
-      alert(t('userRegistration.registrationSuccess', 'Registration successful! Welcome to FootGpt.'));
+      alert(t('userRegistration.registrationSuccess', 'Registration successful! Welcome to footai.'));
       router.replace('/(tab)'); // Navigate to home screen
     }
     // Error is already displayed from context, no need for alert
@@ -164,7 +164,7 @@ const RegisterScreen = () => {
             <Ionicons name="trophy" size={48} color={theme.colors.accent} />
           </View>
           <Text style={styles.title}>{t('userRegistration.createAccount', 'Create Account')}</Text>
-          <Text style={styles.subtitle}>{t('userRegistration.joinForSmarterBetting', 'Join FootGpt for smarter betting')}</Text>
+          <Text style={styles.subtitle}>{t('userRegistration.joinForSmarterBetting', 'Join footai for smarter betting')}</Text>
         </View>
 
         {/* Error Message */}
@@ -394,7 +394,7 @@ const RegisterScreen = () => {
 
         {/* Features */}
         <View style={styles.featuresContainer}>
-          <Text style={styles.featuresTitle}>{t('userRegistration.whyJoinFootGpt', 'Why Join FootGpt?')}</Text>
+          <Text style={styles.featuresTitle}>{t('userRegistration.whyJoinfootai', 'Why Join footai?')}</Text>
           <View style={styles.featuresGrid}>
             <View style={styles.featureItem}>
               <Ionicons name="analytics" size={24} color={theme.colors.accent} />

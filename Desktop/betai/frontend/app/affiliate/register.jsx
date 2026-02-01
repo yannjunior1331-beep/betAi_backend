@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// app/register.jsx - Updated with consistent notification system
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +9,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Animated,
+  Platform,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -32,6 +35,9 @@ const AffiliateRegisterScreen = () => {
   const [loading, setLoading] = useState(false);
   const [promoCodeError, setPromoCodeError] = useState('');
   const [selectedBenefits, setSelectedBenefits] = useState([]);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const notificationAnim = useRef(new Animated.Value(0)).current;
 
   // Benefits of becoming an affiliate
   const affiliateBenefits = [
@@ -79,13 +85,39 @@ const AffiliateRegisterScreen = () => {
     },
   ];
 
+  // Handle notification display
+  const showSuccessNotification = (message) => {
+    setNotificationMessage(message);
+    setShowNotification(true);
+    
+    // Animate in
+    Animated.sequence([
+      Animated.timing(notificationAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(3000),
+      Animated.timing(notificationAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowNotification(false);
+    });
+  };
+
   // Generate a random promo code if user doesn't have one
   const generatePromoCode = () => {
-    const prefix = (user?.username || 'FootGpt').toUpperCase().substring(0, 4);
+    const prefix = (user?.username || 'footai').toUpperCase().substring(0, 4);
     const randomNum = Math.floor(100 + Math.random() * 900);
     const generatedCode = `${prefix}${randomNum}`;
     setPromoCode(generatedCode);
     setPromoCodeError('');
+    
+    // Show notification for generated code
+    showSuccessNotification(t('affiliate.register.promoGenerated'));
   };
 
   // Validate promo code
@@ -133,7 +165,11 @@ const AffiliateRegisterScreen = () => {
       const validationError = validatePromoCode(promoCode);
       if (validationError) {
         setPromoCodeError(validationError);
-        Alert.alert(t('affiliate.register.validationError'), validationError);
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Alert.alert(t('affiliate.register.validationError'), validationError);
+        } else {
+          showSuccessNotification(validationError);
+        }
         return;
       }
 
@@ -143,30 +179,86 @@ const AffiliateRegisterScreen = () => {
       const result = await becomeAffiliate(promoCode.trim());
 
       if (result.success) {
-        // Show success message
-        Alert.alert(
-          t('affiliate.register.congratulations'),
-          t('affiliate.register.registrationSuccess'),
-          [
-            {
-              text: t('affiliate.register.viewDashboardBtn'),
-              onPress: () => router.push('/affiliate/dashboard'),
-            },
-            {
-              text: t('affiliate.register.done'),
-              onPress: () => router.back(),
-            },
-          ]
-        );
+        // Show success notification
+        showSuccessNotification(t('affiliate.register.registrationSuccess'));
+        
+        // On mobile, also show alert with options
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Alert.alert(
+            t('affiliate.register.congratulations'),
+            t('affiliate.register.registrationSuccess'),
+            [
+              {
+                text: t('affiliate.register.viewDashboardBtn'),
+                onPress: () => router.push('/affiliate/dashboard'),
+              },
+              {
+                text: t('affiliate.register.done'),
+                onPress: () => router.back(),
+              },
+            ]
+          );
+        } else {
+          // On web, show notification and automatically navigate after delay
+          setTimeout(() => {
+            router.push('/affiliate/dashboard');
+          }, 2000);
+        }
       } else {
         throw new Error(result.error || t('affiliate.register.registrationFailed'));
       }
     } catch (error) {
       console.error('Affiliate registration error:', error);
-      Alert.alert(t('affiliate.register.registrationFailed'), error.message || t('common.error'));
+      
+      // Show error notification
+      const errorMessage = error.message || t('common.error');
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        Alert.alert(t('affiliate.register.registrationFailed'), errorMessage);
+      } else {
+        showSuccessNotification(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Render notification component
+  const renderNotification = () => {
+    if (!showNotification) return null;
+    
+    return (
+      <Animated.View 
+        style={[
+          styles.notification,
+          { 
+            opacity: notificationAnim,
+            transform: [
+              {
+                translateY: notificationAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+        <Text style={styles.notificationText}>{notificationMessage}</Text>
+        <TouchableOpacity 
+          onPress={() => {
+            Animated.timing(notificationAnim, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }).start(() => setShowNotification(false));
+          }}
+          style={styles.notificationClose}
+        >
+          <Ionicons name="close" size={16} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+    );
   };
 
   // Show loading while checking auth
@@ -181,17 +273,24 @@ const AffiliateRegisterScreen = () => {
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
-    Alert.alert(t('affiliate.register.authenticationRequired'), t('affiliate.register.pleaseLogin'), [
-      {
-        text: t('common.cancel'),
-        style: 'cancel',
-        onPress: () => router.back(),
-      },
-      {
-        text: t('profile.loginNow'),
-        onPress: () => router.push('/auth/login'),
-      },
-    ]);
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      Alert.alert(t('affiliate.register.authenticationRequired'), t('affiliate.register.pleaseLogin'), [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+          onPress: () => router.back(),
+        },
+        {
+          text: t('profile.loginNow'),
+          onPress: () => router.push('/auth/login'),
+        },
+      ]);
+    } else {
+      showSuccessNotification(t('affiliate.register.pleaseLogin'));
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
+    }
     return null;
   }
 
@@ -199,6 +298,9 @@ const AffiliateRegisterScreen = () => {
   if (user?.promoCode || user?.isAffiliate) {
     return (
       <View style={styles.container}>
+        {/* Notification */}
+        {renderNotification()}
+        
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -256,6 +358,9 @@ const AffiliateRegisterScreen = () => {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
+      {/* Notification */}
+      {renderNotification()}
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
@@ -410,7 +515,7 @@ const AffiliateRegisterScreen = () => {
                 <Text style={styles.exampleCodeText}>JOHN123</Text>
               </View>
               <View style={styles.exampleCode}>
-                <Text style={styles.exampleCodeText}>FootGpt456</Text>
+                <Text style={styles.exampleCodeText}>footai456</Text>
               </View>
               <View style={styles.exampleCode}>
                 <Text style={styles.exampleCodeText}>WINNER789</Text>
@@ -518,6 +623,31 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: theme.typography.body.fontSize,
     marginTop: theme.spacing.md,
+  },
+  // Notification Styles
+  notification: {
+    position: 'absolute',
+    top: 100,
+    left: theme.spacing.lg,
+    right: theme.spacing.lg,
+    backgroundColor: '#34C759',
+    borderRadius: theme.borderRadius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    gap: 10,
+    zIndex: 1000,
+    ...theme.shadows.medium,
+  },
+  notificationText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  notificationClose: {
+    padding: 4,
   },
   header: {
     flexDirection: 'row',

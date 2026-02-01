@@ -1,4 +1,4 @@
-// app/profile.jsx - Updated with meaningful support content
+// app/profile.jsx - Updated with French content and clean modals
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -52,14 +52,14 @@ const ProfileScreen = () => {
     if (!authLoading) {
       if (!isAuthenticated) {
         // Redirect to login if not authenticated
-        Alert.alert(t('profile.authenticationRequired'), t('profile.pleaseLogin'), [
+        Alert.alert('Authentification requise', 'Veuillez vous connecter pour accéder à votre profil.', [
           {
-            text: t('common.cancel'),
+            text: 'Annuler',
             style: 'cancel',
             onPress: () => router.back(),
           },
           {
-            text: t('profile.loginNow'),
+            text: 'Se connecter',
             onPress: () => router.push('/auth/login'),
           },
         ]);
@@ -67,7 +67,7 @@ const ProfileScreen = () => {
         loadUserData();
       }
     }
-  }, [authLoading, isAuthenticated, t]);
+  }, [authLoading, isAuthenticated]);
 
   const loadUserData = async () => {
     try {
@@ -90,24 +90,8 @@ const ProfileScreen = () => {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      t('profile.logout'),
-      t('profile.logoutConfirm'),
-      [
-        {
-          text: t('common.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('profile.logoutBtn'),
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            router.replace('/auth/login');
-          },
-        },
-      ]
-    );
+     await logout();
+     router.replace('/(auth)/login');
   };
 
   const handleBuyCoins = () => {
@@ -130,8 +114,8 @@ const ProfileScreen = () => {
     const newLanguage = i18n.language === 'en' ? 'fr' : 'en';
     i18n.changeLanguage(newLanguage).then(() => {
       Alert.alert(
-        t('profile.languageChanged'),
-        `${t('profile.languageSetTo')} ${newLanguage === 'fr' ? 'French' : 'English'}`
+        'Langue modifiée',
+        `Langue définie sur ${newLanguage === 'fr' ? 'Français' : 'Anglais'}`
       );
     });
   };
@@ -150,94 +134,53 @@ const ProfileScreen = () => {
     router.push('/betslip');
   };
 
-  const handleSeeAllSaved = () => {
-    if (betslips.length === 0) {
-      Alert.alert(t('profile.noSavedBetslipsAlert'), t('profile.noSavedBetslipsMessage'));
-      return;
-    }
-    router.push('/betslip/saved');
-  };
-
   const handleRemoveBetslip = () => {
     if (!selectedBetslipForDelete) return;
     
     Alert.alert(
-      t('profile.removeBetslip'),
-      t('profile.removeBetslipConfirm'),
+      'Supprimer le pari',
+      'Êtes-vous sûr de vouloir supprimer ce pari ?',
       [
         {
-          text: t('common.cancel'),
+          text: 'Annuler',
           style: 'cancel',
         },
         {
-          text: t('profile.remove'),
+          text: 'Supprimer',
           style: 'destructive',
           onPress: () => {
             const updatedBetslips = betslips.filter(b => b._id !== selectedBetslipForDelete && b.id !== selectedBetslipForDelete);
             updateBetslips(updatedBetslips);
             setExpandedBetslip(null);
             setSelectedBetslipForDelete(null);
-            Alert.alert(t('profile.successRemoved'), t('profile.betslipRemoved'));
+            Alert.alert('Supprimé', 'Le pari a été supprimé avec succès.');
           },
         },
       ]
     );
   };
 
-  // Updated support handlers with meaningful content
+  // Support option handlers
   const handleSupportOption = (option) => {
     setActiveSupportModal(option);
   };
 
-  const handleContactEmail = () => {
-    const email = 'freecoder21@gmail.com';
-    const subject = encodeURIComponent('Support Request - BetAI');
-    const body = encodeURIComponent(`Hello BetAI Team,\n\nI need assistance with:\n\n[Please describe your issue here]\n\nMy username: ${user?.username || 'Not logged in'}\n\nThank you.`);
-    const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
-    
-    Linking.openURL(mailtoUrl).catch((err) => {
-      Alert.alert(
-        t('profile.emailError'),
-        `${t('profile.copyEmail')}: ${email}`
-      );
-      // Copy to clipboard
-      // Clipboard.setString(email); // You'll need to import Clipboard from react-native
-    });
-  };
-
-  const handleVisitWebsite = () => {
-    const websiteUrl = 'https://your-betai-website.com'; // Replace with your actual website
-    Linking.openURL(websiteUrl).catch((err) => {
-      Alert.alert(t('profile.websiteError'), t('profile.websiteUnavailable'));
-    });
-  };
-
-  const handleOpenFAQ = () => {
-    const faqUrl = 'https://your-betai-website.com/faq'; // Replace with your FAQ page
-    Linking.openURL(faqUrl).catch((err) => {
-      Alert.alert(t('profile.faqError'), t('profile.faqUnavailable'));
-    });
-  };
-
-  // Close modal
   const closeSupportModal = () => {
     setActiveSupportModal(null);
   };
 
   // Get subscription display value
   const getSubscriptionDisplay = () => {
-    if (!user?.subscription) return t('profile.none');
+    if (!user?.subscription) return 'Aucun';
     
-    // Handle different subscription types
     const subscription = user.subscription.toLowerCase();
     
-    if (subscription === 'none') return t('profile.none');
-    if (subscription === 'daily') return t('profile.daily');
-    if (subscription === 'weekly') return t('profile.weekly');
-    if (subscription === 'monthly') return t('profile.monthly');
-    if (subscription === 'pro') return t('profile.pro');
+    if (subscription === 'none') return 'Aucun';
+    if (subscription === 'daily') return 'Jour';
+    if (subscription === 'weekly') return 'Hebdo';
+    if (subscription === 'monthly') return 'Mois';
+    if (subscription === 'pro') return 'PRO';
     
-    // Capitalize first letter if it's an unknown type
     return subscription.charAt(0).toUpperCase() + subscription.slice(1);
   };
 
@@ -249,12 +192,10 @@ const ProfileScreen = () => {
     const totalBetslips = userBetslips.length;
     const successRate = totalBetslips > 0 ? Math.round((successfulBetslips / totalBetslips) * 100) : 0;
     
-    // Calculate total winnings (assuming each betslip has a potentialWinnings field)
     const totalWinnings = userBetslips
       .filter(b => b.status === 'won')
       .reduce((sum, b) => sum + (b.potentialWinnings || 0), 0);
     
-    // Calculate accuracy based on predicted vs actual outcomes
     const accuratePredictions = userBetslips.filter(b => b.accuracy === 'high' || b.accuracy >= 70).length;
     const accuracy = totalBetslips > 0 ? Math.round((accuratePredictions / totalBetslips) * 100) : 0;
 
@@ -286,67 +227,59 @@ const ProfileScreen = () => {
     return theme.colors.mediumProbability;
   };
 
-  // Format betslips for display - UPDATED
+  // Format betslips for display
   const formatSavedBetslips = () => {
     return (betslips || []).map(betslip => {
-      // Handle both selections and matches arrays
       let selections = [];
       if (betslip.selections && Array.isArray(betslip.selections)) {
         selections = betslip.selections;
       } else if (betslip.matches && Array.isArray(betslip.matches)) {
-        // Transform matches to selections format with prediction data
         selections = betslip.matches.map(match => ({
-          // Map match fields to selection fields
           matchId: match.fixtureId,
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
-          team1: match.homeTeam || match.team1 || t('profile.home'),
-          team2: match.awayTeam || match.team2 || t('profile.away'),
-          
-          // Get the prediction data from NEW fields
+          team1: match.homeTeam || match.team1 || 'Domicile',
+          team2: match.awayTeam || match.team2 || 'Extérieur',
           pick: match.pick,
-          prediction: match.pick, // For compatibility
+          prediction: match.pick,
           predictionType: match.predictionType || match.pick,
           predictionValue: match.predictionValue,
           fullPrediction: match.fullPrediction || 
             (match.pick && match.predictionValue ? 
               `${match.pick} ${match.predictionValue}` : 
-              match.pick || t('profile.noPrediction')),
-          
+              match.pick || 'Pas de prédiction'),
           odd: match.odd,
           status: match.status,
-          league: match.league || t('profile.unknownLeague'),
+          league: match.league || 'Ligue inconnue',
           confidence: match.confidence || 70,
-          matchTime: match.matchTime || 'TBD',
+          matchTime: match.matchTime || 'À définir',
           source: match.source || 'ai'
         }));
       }
       
       const selectionsCount = selections.length;
       
-      // Convert date properly
-      let dateString = t('profile.recently');
+      let dateString = 'Récemment';
       if (betslip.createdAt) {
         try {
           const date = new Date(betslip.createdAt);
-          dateString = date.toLocaleDateString(isFrench ? 'fr-FR' : 'en-US');
+          dateString = date.toLocaleDateString('fr-FR');
         } catch (e) {
-          dateString = t('profile.recently');
+          dateString = 'Récemment';
         }
       }
       
-      // Calculate potential return if not provided
       const stake = betslip.stake || 10;
       const totalOdds = betslip.totalOdds || betslip.totalOdd || 1.0;
       const potentialReturn = stake * totalOdds;
       
       return {
         id: betslip._id || betslip.id || Math.random().toString(),
-        title: betslip.title || `Betslip #${Math.floor(Math.random() * 1000)}`,
+        title: betslip.title || `Pari #${Math.floor(Math.random() * 1000)}`,
         totalOdds: totalOdds,
         selectionsCount: selectionsCount,
         date: dateString,
-        status: betslip.status || 'pending',
+        status: betslip.status || 'en attente',
         potentialReturn: betslip.potentialReturn || potentialReturn,
         selections: selections,
         stake: stake,
@@ -355,7 +288,6 @@ const ProfileScreen = () => {
         createdAt: betslip.createdAt,
         aiConfidence: betslip.aiConfidence || 70,
         successRate: betslip.successRate || 0,
-        // Include the original betslip for reference
         original: betslip
       };
     });
@@ -367,23 +299,19 @@ const ProfileScreen = () => {
   const renderSelectionItem = (selection, index) => {
     if (!selection) return null;
     
-    // Extract data from different possible structures
-    const league = selection.league || selection.competition || t('profile.unknownLeague');
-    const team1 = selection.team1 || selection.homeTeam || t('profile.home');
-    const team2 = selection.team2 || selection.awayTeam || t('profile.away');
+    const league = selection.league || selection.competition || 'Ligue inconnue';
+    const team1 = selection.team1 || selection.homeTeam || 'Domicile';
+    const team2 = selection.team2 || selection.awayTeam || 'Extérieur';
     const odd = selection.odd || 1.5;
     const confidence = selection.confidence || 70;
-    const matchTime = selection.matchTime || 'TBD';
-    const status = selection.status || 'UPCOMING';
+    const matchTime = selection.matchTime || 'À définir';
+    const status = selection.status || 'À VENIR';
     
-    // Get the FULL prediction text from NEW fields
     const getFullPrediction = () => {
-      // Check for fullPrediction first (already formatted)
       if (selection.fullPrediction) {
         return selection.fullPrediction;
       }
       
-      // Check for predictionType and predictionValue
       if (selection.predictionType && selection.predictionValue) {
         const type = selection.predictionType.toUpperCase();
         const value = selection.predictionValue;
@@ -394,34 +322,26 @@ const ProfileScreen = () => {
           case 'UNDER':
             return `Under ${value}`;
           case 'BTTS':
-            return `BTTS ${value === 'yes' ? 'Yes' : 'No'}`;
+            return `BTTS ${value === 'yes' ? 'Oui' : 'Non'}`;
           case '1X2':
-            if (value === '1') return 'Home Win';
-            if (value === '2') return 'Away Win';
-            if (value === 'X') return 'Draw';
+            if (value === '1') return 'Victoire à domicile';
+            if (value === '2') return 'Victoire à l\'extérieur';
+            if (value === 'X') return 'Match nul';
             return `${value}`;
           case 'DC':
-            return `Double Chance: ${value}`;
+            return `Double chance: ${value}`;
           case '1':
-            return 'Home Win';
+            return 'Victoire à domicile';
           case 'X':
-            return 'Draw';
+            return 'Match nul';
           case '2':
-            return 'Away Win';
-          case '1X':
-            return 'Home Win or Draw';
-          case 'X2':
-            return 'Draw or Away Win';
-          case '12':
-            return 'Home Win or Away Win';
+            return 'Victoire à l\'extérieur';
           default:
             return type;
         }
       }
       
-      // Check for pick (basic type)
       if (selection.pick) {
-        // If pick contains value (e.g., "OVER2.5"), parse it
         if (selection.pick.includes('OVER') && !selection.pick.includes(' ')) {
           const value = selection.pick.replace('OVER', '');
           return value ? `Over ${value}` : 'Over';
@@ -433,8 +353,7 @@ const ProfileScreen = () => {
         return selection.pick;
       }
       
-      // Fallback to prediction or default
-      return selection.prediction || t('profile.noPrediction');
+      return selection.prediction || 'Pas de prédiction';
     };
     
     const prediction = getFullPrediction();
@@ -467,12 +386,12 @@ const ProfileScreen = () => {
         
         <View style={styles.selectionDetails}>
           <View style={styles.predictionContainer}>
-            <Text style={styles.detailLabel}>{t('profile.prediction')}</Text>
+            <Text style={styles.detailLabel}>Prédiction</Text>
             <Text style={styles.predictionText}>{prediction}</Text>
           </View>
           
           <View style={styles.confidenceContainer}>
-            <Text style={styles.detailLabel}>{t('profile.aiConfidence')}:</Text>
+            <Text style={styles.detailLabel}>Confiance IA:</Text>
             <View style={styles.confidenceBadge}>
               <Ionicons name="trending-up" size={10} color={getConfidenceColor(confidence)} />
               <Text style={[styles.confidenceText, { color: getConfidenceColor(confidence) }]}>
@@ -485,7 +404,7 @@ const ProfileScreen = () => {
         <View style={styles.selectionFooter}>
           <Text style={styles.matchTime}>{matchTime}</Text>
           <Text style={styles.selectionSource}>
-            {selection.source === 'ai' ? t('profile.aiGenerated') : t('profile.manual')}
+            {selection.source === 'ai' ? 'Généré par IA' : 'Manuel'}
           </Text>
         </View>
       </View>
@@ -498,150 +417,181 @@ const ProfileScreen = () => {
 
     const getModalContent = () => {
       switch(activeSupportModal) {
-        case t('profile.helpSupport'):
+        case 'Aide & Support':
           return {
-            title: t('profile.helpSupport'),
+            title: 'Aide & Support',
             icon: 'help-circle',
             content: (
               <View style={styles.modalContent}>
                 <Text style={styles.modalDescription}>
-                  {t('profile.helpSupportDescription')}
+                  Notre équipe de support est disponible pour vous aider avec toutes vos questions concernant l'application BetAI, les paris générés, les comptes, les paiements ou toute autre préoccupation.
                 </Text>
                 
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={handleContactEmail}
-                >
-                  <Ionicons name="mail" size={20} color="#FFFFFF" />
-                  <Text style={styles.actionButtonText}>{t('profile.contactViaEmail')}</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.secondaryButton]}
-                  onPress={handleOpenFAQ}
-                >
-                  <Ionicons name="help-buoy" size={20} color={theme.colors.accent} />
-                  <Text style={[styles.actionButtonText, { color: theme.colors.accent }]}>
-                    {t('profile.viewFAQ')}
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>📧 Contact par email</Text>
+                  <Text style={styles.infoText}>
+                    Pour toute assistance, veuillez nous contacter à l'adresse suivante :
                   </Text>
-                </TouchableOpacity>
-                
-                <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>{t('profile.ourEmail')}</Text>
-                  <Text style={styles.contactValue}>freecoder21@gmail.com</Text>
-                  <Text style={styles.contactNote}>{t('profile.responseTime')}</Text>
+                  <Text style={styles.emailText}>freecoder21@gmail.com</Text>
+                  <Text style={styles.infoNote}>
+                    Nous nous efforçons de répondre dans les 24 heures ouvrables.
+                  </Text>
                 </View>
+                
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>📋 Questions fréquentes</Text>
+                  <Text style={styles.infoText}>
+                    • Comment fonctionne l'IA BetAI ?
+                  </Text>
+                  <Text style={styles.infoText}>
+                    • Comment recharger mes crédits ?
+                  </Text>
+                  <Text style={styles.infoText}>
+                    • Comment devenir affilié ?
+                  </Text>
+                  <Text style={styles.infoText}>
+                    • Comment supprimer mon compte ?
+                  </Text>
+                </View>
+                
+                <Text style={styles.modalFooterText}>
+                  Nous apprécions vos commentaires et nous nous engageons à améliorer votre expérience BetAI.
+                </Text>
               </View>
             )
           };
         
-        case t('profile.termsConditions'):
+        case 'Conditions d\'Utilisation':
           return {
-            title: t('profile.termsConditions'),
+            title: 'Conditions d\'Utilisation',
             icon: 'document-text',
             content: (
               <View style={styles.modalContent}>
                 <Text style={styles.modalDescription}>
-                  {t('profile.termsDescription')}
+                  En utilisant BetAI, vous acceptez les conditions suivantes. Veuillez les lire attentivement.
                 </Text>
                 
-                <View style={styles.termsSection}>
-                  <Text style={styles.sectionTitle}>📜 {t('profile.termsSection1')}</Text>
-                  <Text style={styles.sectionText}>{t('profile.termsContent1')}</Text>
-                </View>
-                
-                <View style={styles.termsSection}>
-                  <Text style={styles.sectionTitle}>⚖️ {t('profile.termsSection2')}</Text>
-                  <Text style={styles.sectionText}>{t('profile.termsContent2')}</Text>
-                </View>
-                
-                <View style={styles.termsSection}>
-                  <Text style={styles.sectionTitle}>💳 {t('profile.termsSection3')}</Text>
-                  <Text style={styles.sectionText}>{t('profile.termsContent3')}</Text>
-                </View>
-                
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.secondaryButton]}
-                  onPress={() => {
-                    // You can link to your full terms page here
-                    Alert.alert(t('profile.fullTerms'), t('profile.fullTermsMessage'));
-                  }}
-                >
-                  <Ionicons name="reader" size={20} color={theme.colors.accent} />
-                  <Text style={[styles.actionButtonText, { color: theme.colors.accent }]}>
-                    {t('profile.readFullTerms')}
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>1. Acceptation des conditions</Text>
+                  <Text style={styles.infoText}>
+                    En accédant et en utilisant BetAI, vous acceptez d'être lié par ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service.
                   </Text>
-                </TouchableOpacity>
+                </View>
+                
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>2. Description du service</Text>
+                  <Text style={styles.infoText}>
+                    BetAI fournit des prédictions de paris sportifs générées par intelligence artificielle. Ces prédictions sont à titre informatif seulement. Les utilisateurs sont seuls responsables de leurs décisions de pari.
+                  </Text>
+                </View>
+                
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>3. Responsabilités de l'utilisateur</Text>
+                  <Text style={styles.infoText}>
+                    Vous devez avoir l'âge légal pour parier dans votre juridiction. Les paris sportifs comportent des risques financiers. Ne pariez jamais plus que vous ne pouvez vous permettre de perdre.
+                  </Text>
+                </View>
+                
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>4. Limitation de responsabilité</Text>
+                  <Text style={styles.infoText}>
+                    BetAI n'est pas responsable des pertes financières résultant de l'utilisation de nos prédictions. Les prédictions ne garantissent pas le succès.
+                  </Text>
+                </View>
+                
+                <Text style={styles.modalFooterText}>
+                  Dernière mise à jour : Janvier 2024
+                </Text>
               </View>
             )
           };
         
-        case t('profile.privacyPolicy'):
+        case 'Politique de Confidentialité':
           return {
-            title: t('profile.privacyPolicy'),
+            title: 'Politique de Confidentialité',
             icon: 'shield-checkmark',
             content: (
               <View style={styles.modalContent}>
                 <Text style={styles.modalDescription}>
-                  {t('profile.privacyDescription')}
+                  Nous prenons votre vie privée au sérieux. Cette politique explique comment nous collectons, utilisons et protégeons vos informations.
                 </Text>
                 
-                <View style={styles.privacySection}>
-                  <Ionicons name="lock-closed" size={24} color={theme.colors.accent} />
-                  <Text style={styles.privacyTitle}>{t('profile.dataSecurity')}</Text>
-                  <Text style={styles.privacyText}>{t('profile.dataSecurityContent')}</Text>
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Collecte des données</Text>
+                  <Text style={styles.infoText}>
+                    Nous collectons : informations de compte, données d'utilisation, préférences de pari, et informations de paiement (le cas échéant). Nous ne vendons jamais vos données personnelles.
+                  </Text>
                 </View>
                 
-                <View style={styles.privacySection}>
-                  <Ionicons name="eye-off" size={24} color={theme.colors.accent} />
-                  <Text style={styles.privacyTitle}>{t('profile.dataUsage')}</Text>
-                  <Text style={styles.privacyText}>{t('profile.dataUsageContent')}</Text>
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Utilisation des données</Text>
+                  <Text style={styles.infoText}>
+                    Vos données sont utilisées pour : personnaliser vos prédictions, améliorer notre service, traiter les paiements, et communiquer avec vous concernant votre compte.
+                  </Text>
                 </View>
                 
-                <View style={styles.privacySection}>
-                  <Ionicons name="trash" size={24} color={theme.colors.accent} />
-                  <Text style={styles.privacyTitle}>{t('profile.dataDeletion')}</Text>
-                  <Text style={styles.privacyText}>{t('profile.dataDeletionContent')}</Text>
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Sécurité des données</Text>
+                  <Text style={styles.infoText}>
+                    Nous utilisons le chiffrement SSL, des pare-feux et des pratiques de sécurité standard pour protéger vos informations. Vos mots de passe sont hachés et ne sont jamais stockés en clair.
+                  </Text>
                 </View>
+                
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Vos droits</Text>
+                  <Text style={styles.infoText}>
+                    Vous avez le droit d'accéder, de corriger ou de supprimer vos données personnelles. Contactez-nous à freecoder21@gmail.com pour exercer ces droits.
+                  </Text>
+                </View>
+                
+                <Text style={styles.modalFooterText}>
+                  Nous nous engageons à protéger votre vie privée conformément au RGPD et autres réglementations applicables.
+                </Text>
               </View>
             )
           };
         
-        case t('profile.aboutBetai'):
+        case 'À Propos de BetAI':
           return {
-            title: t('profile.aboutBetai'),
+            title: 'À Propos de BetAI',
             icon: 'information-circle',
             content: (
               <View style={styles.modalContent}>
                 <Text style={styles.modalDescription}>
-                  {t('profile.aboutDescription')}
+                  BetAI est une plateforme révolutionnaire qui utilise l'intelligence artificielle pour générer des prédictions de paris sportifs avec une précision élevée.
                 </Text>
                 
-                <View style={styles.aboutSection}>
-                  <Ionicons name="bulb" size={24} color={theme.colors.accent} />
-                  <Text style={styles.aboutTitle}>{t('profile.ourMission')}</Text>
-                  <Text style={styles.aboutText}>{t('profile.ourMissionContent')}</Text>
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Notre Mission</Text>
+                  <Text style={styles.infoText}>
+                    Notre mission est d'utiliser la technologie d'intelligence artificielle la plus avancée pour fournir aux parieurs sportifs des prédictions de qualité supérieure, des analyses approfondies et des outils innovants pour améliorer leur expérience de pari.
+                  </Text>
                 </View>
                 
-                <View style={styles.aboutSection}>
-                  <Ionicons name="analytics" size={24} color={theme.colors.accent} />
-                  <Text style={styles.aboutTitle}>{t('profile.ourTechnology')}</Text>
-                  <Text style={styles.aboutText}>{t('profile.ourTechnologyContent')}</Text>
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Notre Technologie</Text>
+                  <Text style={styles.infoText}>
+                    Nous utilisons des modèles d'IA de pointe qui analysent des milliers de points de données par match : statistiques historiques, forme des équipes, blessures, conditions météorologiques, et tendances du marché.
+                  </Text>
                 </View>
                 
-                <View style={styles.aboutSection}>
-                  <Ionicons name="people" size={24} color={theme.colors.accent} />
-                  <Text style={styles.aboutTitle}>{t('profile.ourTeam')}</Text>
-                  <Text style={styles.aboutText}>{t('profile.ourTeamContent')}</Text>
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Notre Équipe</Text>
+                  <Text style={styles.infoText}>
+                    Fondé par des experts en data science et des passionnés de sports, BetAI combine l'expertise technique avec une profonde compréhension des paris sportifs.
+                  </Text>
                 </View>
                 
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={handleVisitWebsite}
-                >
-                  <Ionicons name="globe" size={20} color="#FFFFFF" />
-                  <Text style={styles.actionButtonText}>{t('profile.visitOurWebsite')}</Text>
-                </TouchableOpacity>
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoTitle}>Notre Engagement</Text>
+                  <Text style={styles.infoText}>
+                    Nous croyons en un pari responsable. Notre application inclut des outils de gestion des dépôts et des rappels pour encourager des habitudes de pari saines.
+                  </Text>
+                </View>
+                
+                <Text style={styles.modalFooterText}>
+                  Rejoignez des milliers d'utilisateurs qui font déjà confiance à BetAI pour leurs décisions de pari.
+                </Text>
               </View>
             )
           };
@@ -684,19 +634,6 @@ const ProfileScreen = () => {
             >
               {modalData.content}
             </ScrollView>
-
-            {/* Modal Footer */}
-            <View style={styles.modalFooter}>
-              <TouchableOpacity 
-                style={[styles.modalActionButton, styles.primaryActionButton]}
-                onPress={handleContactEmail}
-              >
-                <Ionicons name="mail" size={18} color="#FFFFFF" />
-                <Text style={styles.primaryActionButtonText}>
-                  {t('profile.contactSupport')}
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </Modal>
@@ -708,7 +645,7 @@ const ProfileScreen = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.accent} />
-        <Text style={styles.loadingText}>{t('profile.loadingProfile')}</Text>
+        <Text style={styles.loadingText}>Chargement du profil...</Text>
       </View>
     );
   }
@@ -718,14 +655,14 @@ const ProfileScreen = () => {
     return (
       <View style={styles.authContainer}>
         <Ionicons name="person-circle" size={80} color={theme.colors.textMuted} />
-        <Text style={styles.authTitle}>{t('profile.authenticationRequired')}</Text>
-        <Text style={styles.authText}>{t('profile.pleaseLoginView')}</Text>
+        <Text style={styles.authTitle}>Authentification requise</Text>
+        <Text style={styles.authText}>Veuillez vous connecter pour voir votre profil</Text>
         <TouchableOpacity 
           style={styles.authButton}
           onPress={() => router.push('/auth/login')}
         >
           <Ionicons name="log-in" size={20} color="#FFFFFF" />
-          <Text style={styles.authButtonText}>{t('profile.loginNow')}</Text>
+          <Text style={styles.authButtonText}>Se connecter</Text>
         </TouchableOpacity>
       </View>
     );
@@ -762,16 +699,16 @@ const ProfileScreen = () => {
             )}
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user?.username || 'Guest User'}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'guest@example.com'}</Text>
+            <Text style={styles.userName}>{user?.username || 'Utilisateur Invité'}</Text>
+            <Text style={styles.userEmail}>{user?.email || 'invité@exemple.com'}</Text>
             <View style={styles.statsRow}>
               <View style={styles.statBadge}>
                 <Ionicons name="trophy" size={14} color={theme.colors.accent} />
-                <Text style={styles.statBadgeText}>{userStats.successRate} {t('profile.success')}</Text>
+                <Text style={styles.statBadgeText}>{userStats.successRate} Succès</Text>
               </View>
               <View style={styles.statBadge}>
                 <Ionicons name="trending-up" size={14} color={theme.colors.highProbability} />
-                <Text style={styles.statBadgeText}>{userStats.accuracy} {t('profile.accuracy')}</Text>
+                <Text style={styles.statBadgeText}>{userStats.accuracy} Précision</Text>
               </View>
             </View>
           </View>
@@ -784,19 +721,19 @@ const ProfileScreen = () => {
           <View style={styles.statCard}>
             <Ionicons name="receipt" size={24} color={theme.colors.accent} />
             <Text style={styles.statValue}>{userStats.totalBetslips}</Text>
-            <Text style={styles.statLabel}>{t('profile.totalBetslips')}</Text>
+            <Text style={styles.statLabel}>Paris Totaux</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons name="card" size={24} color={getSubscriptionColor()} />
             <Text style={[styles.statValue, { color: getSubscriptionColor() }]}>
               {userStats.subscription}
             </Text>
-            <Text style={styles.statLabel}>{t('profile.subscription')}</Text>
+            <Text style={styles.statLabel}>Abonnement</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons name="diamond-outline" size={24} color="#F7931A" />
             <Text style={styles.statValue}>{userStats.userCredits.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>{t('profile.credits')}</Text>
+            <Text style={styles.statLabel}>Crédits</Text>
           </View>
         </View>
       </View>
@@ -809,8 +746,8 @@ const ProfileScreen = () => {
         >
           <Ionicons name="add-circle" size={24} color={theme.colors.accent} />
           <View style={styles.createBetslipContent}>
-            <Text style={styles.createBetslipTitle}>{t('profile.createNewBetslip')}</Text>
-            <Text style={styles.createBetslipText}>{t('profile.generateAiPowered')}</Text>
+            <Text style={styles.createBetslipTitle}>Créer un nouveau pari</Text>
+            <Text style={styles.createBetslipText}>Générer des paris alimentés par IA</Text>
           </View>
           <Ionicons name="arrow-forward" size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
@@ -822,7 +759,7 @@ const ProfileScreen = () => {
           <View style={styles.sectionTitleContainer}>
             <Ionicons name="bookmark" size={20} color={theme.colors.accent} />
             <Text style={styles.sectionTitle}>
-              {t('profile.savedBetslips')} {betslips?.length > 0 && `(${betslips.length})`}
+              Paris Enregistrés {betslips?.length > 0 && `(${betslips.length})`}
             </Text>
           </View>
         </View>
@@ -849,13 +786,13 @@ const ProfileScreen = () => {
                       <View style={styles.betslipDetail}>
                         <Ionicons name="football" size={12} color={theme.colors.textSecondary} />
                         <Text style={styles.betslipDetailText}>
-                          {betslip.selectionsCount} {betslip.selectionsCount === 1 ? t('profile.match') : t('profile.matches')}
+                          {betslip.selectionsCount} {betslip.selectionsCount === 1 ? 'match' : 'matches'}
                         </Text>
                       </View>
                     </View>
                   </View>
                   <View style={styles.betslipOdd}>
-                    <Text style={styles.betslipOddLabel}>{t('profile.totalOdds')}</Text>
+                    <Text style={styles.betslipOddLabel}>Cote Totale</Text>
                     <Text style={styles.betslipOddValue}>{betslip.totalOdds.toFixed(2)}</Text>
                   </View>
                   <View style={styles.betslipExpandIcon}>
@@ -873,7 +810,7 @@ const ProfileScreen = () => {
                     {/* Betslip Summary */}
                     <View style={styles.betslipSummary}>
                       <View style={styles.summaryItem}>
-                        <Text style={styles.summaryLabel}>{t('profile.aiConfidence')}</Text>
+                        <Text style={styles.summaryLabel}>Confiance IA</Text>
                         <View style={styles.confidenceMeterContainer}>
                           <View style={styles.confidenceMeter}>
                             <View 
@@ -893,7 +830,7 @@ const ProfileScreen = () => {
                       </View>
                       
                       <View style={styles.summaryItem}>
-                        <Text style={styles.summaryLabel}>{t('profile.successRate')}</Text>
+                        <Text style={styles.summaryLabel}>Taux de Réussite</Text>
                         <Text style={[styles.successRate, { color: getConfidenceColor(betslip.successRate) }]}>
                           {betslip.successRate}%
                         </Text>
@@ -903,12 +840,12 @@ const ProfileScreen = () => {
                     {/* Potential Return Section */}
                     <View style={styles.potentialWinSection}>
                       <View style={styles.stakeBox}>
-                        <Text style={styles.stakeLabel}>{t('profile.stake')}</Text>
+                        <Text style={styles.stakeLabel}>Mise</Text>
                         <Text style={styles.stakeAmount}>${betslip.stake?.toFixed(2) || '10.00'}</Text>
                       </View>
                       <Ionicons name="arrow-forward" size={16} color={theme.colors.textSecondary} />
                       <View style={styles.potentialBox}>
-                        <Text style={styles.potentialLabel}>{t('profile.potentialReturn')}</Text>
+                        <Text style={styles.potentialLabel}>Gain Potentiel</Text>
                         <Text style={styles.potentialAmount}>
                           ${betslip.potentialReturn?.toFixed(2)}
                         </Text>
@@ -918,20 +855,20 @@ const ProfileScreen = () => {
                     {/* Selections List */}
                     {betslip.selections && betslip.selections.length > 0 && (
                       <View style={styles.selectionsSection}>
-                        <Text style={styles.selectionsTitle}>{t('profile.selectionsInBetslip')}</Text>
+                        <Text style={styles.selectionsTitle}>Sélections dans ce pari</Text>
                         <View style={styles.selectionsList}>
                           {betslip.selections.map((selection, index) => renderSelectionItem(selection, index))}
                         </View>
                       </View>
                     )}
 
-                    {/* Delete Button (Replaces the "Use Betslip" button) */}
+                    {/* Delete Button */}
                     <TouchableOpacity 
                       style={styles.deleteButton}
                       onPress={handleRemoveBetslip}
                     >
                       <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
-                      <Text style={styles.deleteButtonText}>{t('profile.deleteThisBetslip')}</Text>
+                      <Text style={styles.deleteButtonText}>Supprimer ce pari</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -941,16 +878,16 @@ const ProfileScreen = () => {
         ) : (
           <View style={styles.emptyBetslips}>
             <Ionicons name="bookmark-outline" size={48} color={theme.colors.textMuted} />
-            <Text style={styles.emptyBetslipsTitle}>{t('profile.noSavedBetslips')}</Text>
+            <Text style={styles.emptyBetslipsTitle}>Aucun pari enregistré</Text>
             <Text style={styles.emptyBetslipsText}>
-              {t('profile.createFirstOne')}
+              Créez votre premier pari et enregistrez-le pour le retrouver ici
             </Text>
             <TouchableOpacity 
               style={styles.emptyButton}
               onPress={handleNavigateToBetslip}
             >
               <Ionicons name="add" size={20} color="#FFFFFF" />
-              <Text style={styles.emptyButtonText}>{t('profile.createBetslip')}</Text>
+              <Text style={styles.emptyButtonText}>Créer un pari</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -961,7 +898,7 @@ const ProfileScreen = () => {
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleContainer}>
             <Ionicons name="person-circle" size={20} color={theme.colors.accent} />
-            <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
+            <Text style={styles.sectionTitle}>Compte</Text>
           </View>
         </View>
 
@@ -970,7 +907,7 @@ const ProfileScreen = () => {
           <TouchableOpacity style={styles.option} onPress={handleLanguageToggle}>
             <View style={styles.optionLeft}>
               <Ionicons name="language" size={22} color={theme.colors.textPrimary} />
-              <Text style={styles.optionText}>{t('profile.language')}</Text>
+              <Text style={styles.optionText}>Langue</Text>
             </View>
             <View style={styles.optionRight}>
               <View style={styles.languageToggle}>
@@ -989,11 +926,11 @@ const ProfileScreen = () => {
           >
             <View style={styles.optionLeft}>
               <Ionicons name="diamond-outline" size={22} color="#F7931A" />
-              <Text style={styles.optionText}>{t('profile.buyCoins')}</Text>
+              <Text style={styles.optionText}>Acheter des crédits</Text>
             </View>
             <View style={styles.optionRight}>
               <View style={styles.coinsBadge}>
-                <Text style={styles.coinsBadgeText}>{t('profile.getCoins')}</Text>
+                <Text style={styles.coinsBadgeText}>Obtenir</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
             </View>
@@ -1011,19 +948,19 @@ const ProfileScreen = () => {
                 color={isAffiliate ? theme.colors.highProbability : theme.colors.textPrimary} 
               />
               <Text style={styles.optionText}>
-                {isAffiliate ? t('profile.affiliateProgram') : t('profile.becomeAffiliate')}
+                {isAffiliate ? 'Programme d\'affiliation' : 'Devenir affilié'}
               </Text>
             </View>
             {!isAffiliate ? (
               <View style={styles.optionRight}>
                 <View style={styles.earnBadge}>
-                  <Text style={styles.earnBadgeText}>{t('profile.earn')}</Text>
+                  <Text style={styles.earnBadgeText}>Gagner</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
               </View>
             ) : (
               <View style={styles.affiliateActiveBadge}>
-                <Text style={styles.affiliateActiveText}>{t('profile.active')}</Text>
+                <Text style={styles.affiliateActiveText}>Actif</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -1032,7 +969,7 @@ const ProfileScreen = () => {
           <View style={styles.option}>
             <View style={styles.optionLeft}>
               <Ionicons name="notifications" size={22} color={theme.colors.textPrimary} />
-              <Text style={styles.optionText}>{t('profile.notifications')}</Text>
+              <Text style={styles.optionText}>Notifications</Text>
             </View>
             <Switch
               value={notifications}
@@ -1049,38 +986,38 @@ const ProfileScreen = () => {
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleContainer}>
             <Ionicons name="help-circle" size={20} color={theme.colors.accent} />
-            <Text style={styles.sectionTitle}>{t('profile.supportLegal')}</Text>
+            <Text style={styles.sectionTitle}>Support & Légal</Text>
           </View>
         </View>
 
         <View style={styles.supportOptions}>
           <TouchableOpacity 
             style={styles.supportOption}
-            onPress={() => handleSupportOption(t('profile.helpSupport'))}
+            onPress={() => handleSupportOption('Aide & Support')}
           >
             <Ionicons name="help" size={18} color={theme.colors.textSecondary} />
-            <Text style={styles.supportOptionText}>{t('profile.helpSupport')}</Text>
+            <Text style={styles.supportOptionText}>Aide & Support</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.supportOption}
-            onPress={() => handleSupportOption(t('profile.termsConditions'))}
+            onPress={() => handleSupportOption('Conditions d\'Utilisation')}
           >
             <Ionicons name="document-text" size={18} color={theme.colors.textSecondary} />
-            <Text style={styles.supportOptionText}>{t('profile.termsConditions')}</Text>
+            <Text style={styles.supportOptionText}>Conditions d'Utilisation</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.supportOption}
-            onPress={() => handleSupportOption(t('profile.privacyPolicy'))}
+            onPress={() => handleSupportOption('Politique de Confidentialité')}
           >
             <Ionicons name="shield-checkmark" size={18} color={theme.colors.textSecondary} />
-            <Text style={styles.supportOptionText}>{t('profile.privacyPolicy')}</Text>
+            <Text style={styles.supportOptionText}>Politique de Confidentialité</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.supportOption}
-            onPress={() => handleSupportOption(t('profile.aboutBetai'))}
+            onPress={() => handleSupportOption('À Propos de BetAI')}
           >
             <Ionicons name="information-circle" size={18} color={theme.colors.textSecondary} />
-            <Text style={styles.supportOptionText}>{t('profile.aboutBetai')}</Text>
+            <Text style={styles.supportOptionText}>À Propos de BetAI</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1088,13 +1025,13 @@ const ProfileScreen = () => {
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Ionicons name="log-out" size={20} color="#EF4444" />
-        <Text style={styles.logoutText}>{t('profile.logout')}</Text>
+        <Text style={styles.logoutText}>Déconnexion</Text>
       </TouchableOpacity>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.version}>{t('profile.version')}</Text>
-        <Text style={styles.copyright}>{t('profile.copyright')}</Text>
+        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={styles.copyright}>© 2024 BetAI. Tous droits réservés.</Text>
       </View>
 
       {/* Support Modal */}
@@ -1301,11 +1238,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.title.fontSize,
     fontWeight: '700',
   },
-  seeAll: {
-    color: theme.colors.accent,
-    fontSize: theme.typography.body.fontSize,
-    fontWeight: '600',
-  },
   savedBetslips: {
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.lg,
@@ -1368,16 +1300,12 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     paddingTop: 0,
     backgroundColor: theme.colors.cardElevated,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
   betslipSummary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   summaryItem: {
     alignItems: 'center',
@@ -1416,8 +1344,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   stakeBox: {
     alignItems: 'center',
@@ -1464,8 +1390,6 @@ const styles = StyleSheet.create({
   selectionItem: {
     marginBottom: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   selectionHeader: {
     flexDirection: 'row',
@@ -1550,8 +1474,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: theme.spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
   matchTime: {
     color: theme.colors.textSecondary,
@@ -1623,8 +1545,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   affiliateOption: {
     backgroundColor: `${theme.colors.highProbability}10`,
@@ -1720,8 +1640,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
     gap: theme.spacing.md,
   },
   supportOptionText: {
@@ -1779,8 +1697,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   modalTitleContainer: {
     flexDirection: 'row',
@@ -1807,123 +1723,39 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: theme.spacing.lg,
   },
-  actionButton: {
-    backgroundColor: theme.colors.accent,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.sm,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
+  infoSection: {
+    marginBottom: theme.spacing.lg,
   },
-  secondaryButton: {
-    backgroundColor: `${theme.colors.accent}20`,
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: theme.typography.body.fontSize,
-    fontWeight: '600',
-  },
-  contactInfo: {
-    backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginTop: theme.spacing.md,
-  },
-  contactLabel: {
-    color: theme.colors.textSecondary,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  contactValue: {
+  infoTitle: {
     color: theme.colors.textPrimary,
-    fontSize: theme.typography.body.fontSize,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  contactNote: {
-    color: theme.colors.textMuted,
-    fontSize: 11,
-    fontStyle: 'italic',
-  },
-  termsSection: {
-    backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
-  },
-  sectionTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: theme.spacing.sm,
   },
-  sectionText: {
+  infoText: {
     color: theme.colors.textSecondary,
     fontSize: theme.typography.body.fontSize,
     lineHeight: 20,
-  },
-  privacySection: {
-    backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
-    alignItems: 'center',
-  },
-  privacyTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.xs,
   },
-  privacyText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.body.fontSize,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  aboutSection: {
-    backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
-    alignItems: 'center',
-  },
-  aboutTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  aboutText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.body.fontSize,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  modalFooter: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  modalActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.sm,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-  },
-  primaryActionButton: {
-    backgroundColor: theme.colors.accent,
-  },
-  primaryActionButtonText: {
-    color: '#FFFFFF',
-    fontSize: theme.typography.body.fontSize,
+  emailText: {
+    color: theme.colors.accent,
+    fontSize: 16,
     fontWeight: '600',
+    marginVertical: theme.spacing.sm,
+  },
+  infoNote: {
+    color: theme.colors.textMuted,
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: theme.spacing.xs,
+  },
+  modalFooterText: {
+    color: theme.colors.textMuted,
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: theme.spacing.lg,
+    textAlign: 'center',
   },
 });
 

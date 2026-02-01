@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "FootGpt",
-    "slug": "FootGpt",
+    "name": "footai",
+    "slug": "footai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "platforms": ["ios", "android", "web"],   
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash1.png",

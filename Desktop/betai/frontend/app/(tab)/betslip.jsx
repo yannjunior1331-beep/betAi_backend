@@ -1,4 +1,4 @@
-// app/betslip.jsx - Updated with keyboard dismiss functionality
+// app/betslip.jsx - FIXED for web browser state updates
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -14,6 +14,7 @@ import {
   Modal,
   Animated,
   Keyboard,
+  ScrollView,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import BetslipCard from '../../components/betslipCard';
@@ -21,9 +22,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '../../contexts/authContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import '../../utils/i18n';
 
-const API_BASE_URL = 'http://192.168.55.215:3000/api';
+const API_BASE_URL = 'https://betai-backend-uxt5.onrender.com/api';
 const GENERATE_ENDPOINT = `${API_BASE_URL}/betslips/generate`;
 const CREDITS_REQUIRED = 100; // Credits needed per generation
 
@@ -33,6 +35,7 @@ const BetslipGenerator = () => {
     user, 
     hasFullAccess,
     updateUser,
+    refreshUser,
   } = useAuth();
   
   const { t } = useTranslation();
@@ -45,8 +48,26 @@ const BetslipGenerator = () => {
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [creditWarningVisible, setCreditWarningVisible] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [saveNotificationMessage, setSaveNotificationMessage] = useState('');
+  // const [forceUpdate, setForceUpdate] = useState(0); // Add force update trigger
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const saveNotificationAnim = useRef(new Animated.Value(0)).current;
   const textInputRef = useRef(null);
+
+  // Debug: Log user data to see what's happening
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 USER DATA FOR BETSLIP:', {
+        username: user.username,
+        isAdmin: user.isAdmin,
+        subscription: user.subscription,
+        subscriptionEndDate: user.subscriptionEndDate,
+        credits: user.credits,
+        hasFullAccess: hasFullAccess()
+      });
+    }
+  }, [user]); // Add forceUpdate to dependencies
 
   // Keyboard listeners
   useEffect(() => {
@@ -81,7 +102,31 @@ const BetslipGenerator = () => {
         setCreditWarningVisible(false);
       }
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user]); // Add forceUpdate to dependencies
+
+
+  // Handle save notifications
+  const handleSaveNotification = (message) => {
+    setSaveNotificationMessage(message);
+    setShowSaveNotification(true);
+    
+    // Animate in
+    Animated.sequence([
+      Animated.timing(saveNotificationAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2000),
+      Animated.timing(saveNotificationAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowSaveNotification(false);
+    });
+  };
 
   // Add spinning animation effect
   useEffect(() => {
@@ -99,6 +144,44 @@ const BetslipGenerator = () => {
       }
     };
   }, [isGenerating]);
+
+  // FIX: Force sync credits when component loads AND after each generation
+  // useEffect(() => {
+  //   const syncCreditsOnLoad = async () => {
+  //     if (!isAuthenticated || !user) return;
+      
+  //     console.log('🔄 Checking credit sync on component load...');
+      
+  //     try {
+  //       const token = await AsyncStorage.getItem('@footai_token');
+  //       if (!token) return;
+        
+  //       const response = await fetch(`${API_BASE_URL}/users/me`, {
+  //         method: 'GET',
+  //         headers: {
+  //           'Authorization': `Bearer ${token}`,
+  //           'Content-Type': 'application/json',
+  //         },
+  //       });
+        
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         if (data.success && data.user && data.user.credits !== user.credits) {
+  //           console.log(`🔄 Syncing credits: UI=${user.credits} → Backend=${data.user.credits}`);
+  //           updateUser({ credits: data.user.credits });
+  //           // Force a re-render on web
+  //           setForceUpdate(prev => prev + 1);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.log('Credit sync skipped:', error.message);
+  //     }
+  //   };
+    
+  //   // Run sync 500ms after component loads
+  //   const timer = setTimeout(syncCreditsOnLoad, 500);
+  //   return () => clearTimeout(timer);
+  // }, [isAuthenticated, user]);
 
   // Animate credit warning
   useEffect(() => {
@@ -143,7 +226,7 @@ const BetslipGenerator = () => {
     return false;
   };
 
-  // Validate input on change - FIXED STYLING
+  // Validate input on change
   const handleTargetOddChange = (text) => {
     // Remove non-numeric characters except decimal point
     const cleanedText = text.replace(/[^0-9.]/g, '');
@@ -200,7 +283,7 @@ const BetslipGenerator = () => {
       };
       
       if (isAuthenticated) {
-        const token = await AsyncStorage.getItem('@FootGpt_token');
+        const token = await AsyncStorage.getItem('@footai_token');
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
@@ -251,16 +334,36 @@ const BetslipGenerator = () => {
           );
         }
         
-        // Deduct credits if not admin/pro
-        if (isAuthenticated && user && !hasFullAccess()) {
-          const newCredits = Math.max(0, (user.credits || 0) - CREDITS_REQUIRED);
-          updateUser({ credits: newCredits });
-          
-          // Show warning if now insufficient
-          if (newCredits < CREDITS_REQUIRED) {
-            setCreditWarningVisible(true);
-          }
+        // ✅ WEB FIX: Force sync credits and trigger re-render
+      // ✅ SIMPLE FIX: Immediately refresh user after successful generation
+if (isAuthenticated) {
+  try {
+    console.log('🔄 Refreshing user credits after generation...');
+    
+    // Call refreshUser to get fresh data from backend
+    if (refreshUser) {
+      const refreshResult = await refreshUser();
+      
+      if (refreshResult.success) {
+        console.log(`✅ User refreshed with ${refreshResult.user.credits} credits`);
+        
+        // Show warning if credits are now insufficient
+        if (refreshResult.user.credits < CREDITS_REQUIRED) {
+          setCreditWarningVisible(true);
         }
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not refresh user after generation:', error.message);
+    // If refresh fails, fall back to local deduction
+    // const newCredits = Math.max(0, (user.credits || 0) - CREDITS_REQUIRED);
+    // updateUser({ credits: newCredits });
+    
+    if (newCredits < CREDITS_REQUIRED) {
+      setCreditWarningVisible(true);
+    }
+  }
+}
       } else {
         Alert.alert(t('betslip.errors.generationFailed'), data.error || t('betslip.errors.generationError'));
         setBetslips([]);
@@ -272,7 +375,7 @@ const BetslipGenerator = () => {
       if (error.message.includes('Network request failed') || error.message.includes('fetch')) {
         Alert.alert(
           t('betslip.connectionError.title'),
-          t('betslip.connectionError.message', { ip: 'http:// 192.168.55.215:3000' })
+          t('betslip.connectionError.message', { ip: 'http://192.168.138.215:3000' })
         );
       } else {
         Alert.alert(t('common.error'), error.message || t('common.error'));
@@ -291,7 +394,7 @@ const BetslipGenerator = () => {
     setInputError(false);
   };
 
-  // Get user credits display info
+  // ✅ Get user credits display info
   const getUserCreditsInfo = () => {
     if (!isAuthenticated) {
       return {
@@ -304,35 +407,52 @@ const BetslipGenerator = () => {
     const isAdmin = user?.isAdmin || false;
     const credits = user?.credits || 0;
     
+    console.log('💰 CREDITS DISPLAY:', {
+      username: user?.username,
+      credits,
+      isAdmin
+    });
+    
+    // Admins show as admin
     if (isAdmin) {
       return {
-        text: t('betslip.authStatus.adminUnlimited'),
+        text: 'Admin • Unlimited',
         color: theme.colors.highProbability,
         icon: 'shield-checkmark',
       };
     }
     
-    if (hasFullAccess()) {
-      return {
-        text: t('betslip.authStatus.proUnlimited'),
-        color: theme.colors.accent,
-        icon: 'infinite',
-      };
-    }
-    
+    // Everyone else shows credits
     if (credits >= CREDITS_REQUIRED) {
       return {
-        text: t('betslip.authStatus.credits', { count: credits }),
+        text: `${credits} credits`,
         color: theme.colors.highProbability,
         icon: 'wallet',
       };
     }
     
     return {
-      text: t('betslip.authStatus.needCredits', { count: credits, required: CREDITS_REQUIRED }),
+      text: `Need ${CREDITS_REQUIRED} credits (You have ${credits})`,
       color: '#ff9500',
       icon: 'warning',
     };
+  };
+
+  // ✅ Check if generate button should be disabled
+  const isGenerateButtonDisabled = () => {
+    // If generating, always disabled
+    if (isGenerating) return true;
+    
+    // If input error, disabled
+    if (inputError) return true;
+    
+    // Check if user can generate based on credits/subscription
+    if (!canGenerateBetslips()) return true;
+    
+    // If no target odd, disabled
+    if (!targetOdd || targetOdd.trim() === '') return true;
+    
+    return false;
   };
 
   // Render credit warning message
@@ -370,12 +490,7 @@ const BetslipGenerator = () => {
             onPress={() => {
               dismissKeyboard();
               setCreditWarningVisible(false);
-              // Navigate to appropriate screen
-              // if (isAuthenticated) {
-              //   navigation.navigate('PurchaseCredits');
-              // } else {
-              //   navigation.navigate('Login');
-              // }
+              setShowCreditModal(true);
             }}
           >
             <Text style={styles.creditWarningActionText}>
@@ -401,10 +516,53 @@ const BetslipGenerator = () => {
     );
   };
 
+  // Render save notification
+  const renderSaveNotification = () => {
+    if (!showSaveNotification) return null;
+    
+    return (
+      <Animated.View 
+        style={[
+          styles.saveNotification,
+          { 
+            opacity: saveNotificationAnim,
+            transform: [
+              {
+                translateY: saveNotificationAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+        <Text style={styles.saveNotificationText}>{saveNotificationMessage}</Text>
+        <TouchableOpacity 
+          onPress={() => {
+            Animated.timing(saveNotificationAnim, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }).start(() => setShowSaveNotification(false));
+          }}
+          style={styles.saveNotificationClose}
+        >
+          <Ionicons name="close" size={16} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
   const renderBetslip = ({ item, index }) => (
     <View style={styles.betslipWrapper}>
       {index > 0 && <View style={styles.betslipDivider} />}
-      <BetslipCard betslip={item} index={index + 1} />
+      <BetslipCard 
+        betslip={item} 
+        index={index + 1}
+        onSaveSuccess={(message) => handleSaveNotification(message)}
+      />
     </View>
   );
 
@@ -490,174 +648,185 @@ const BetslipGenerator = () => {
   );
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>{t('betslip.title')}</Text>
-            <Text style={styles.subtitle}>
-              {t('betslip.subtitle')}
-            </Text>
-            {renderAuthStatus()}
-          </View>
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>{t('betslip.title')}</Text>
+              <Text style={styles.subtitle}>
+                {t('betslip.subtitle')}
+              </Text>
+              {renderAuthStatus()}
+            </View>
 
-          {/* Credit Warning Message */}
-          {renderCreditWarning()}
+            {/* Credit Warning Message */}
+            {renderCreditWarning()}
 
-          {/* Simple Input Section - FIXED STYLING */}
-          <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <View style={styles.inputSection}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>{t('betslip.targetOdd')}</Text>
-                <View style={[
-                  styles.inputWrapper,
-                  inputError && styles.inputWrapperError
-                ]}>
-                  <TextInput
-                    ref={textInputRef}
-                    style={[
-                      styles.input,
-                      inputError && styles.inputError
-                    ]}
-                    placeholder={t('betslip.targetOddPlaceholder')}
-                    placeholderTextColor={theme.colors.textMuted}
-                    keyboardType="decimal-pad"
-                    value={targetOdd}
-                    onChangeText={handleTargetOddChange}
-                    editable={!isGenerating}
-                    onSubmitEditing={dismissKeyboard}
-                    returnKeyType="done"
-                    blurOnSubmit={true}
-                  />
+            {/* Simple Input Section */}
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+              <View style={styles.inputSection}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>{t('betslip.targetOdd')}</Text>
+                  <View style={[
+                    styles.inputWrapper,
+                    inputError && styles.inputWrapperError
+                  ]}>
+                    <TextInput
+                      ref={textInputRef}
+                      style={[
+                        styles.input,
+                        inputError && styles.inputError
+                      ]}
+                      placeholder={t('betslip.targetOddPlaceholder')}
+                      placeholderTextColor={theme.colors.textMuted}
+                      keyboardType="decimal-pad"
+                      value={targetOdd}
+                      onChangeText={handleTargetOddChange}
+                      editable={!isGenerating}
+                      onSubmitEditing={dismissKeyboard}
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                    />
+                    {inputError && (
+                      <View style={styles.errorIcon}>
+                        <Ionicons name="alert-circle" size={20} color="#ff3b30" />
+                      </View>
+                    )}
+                  </View>
                   {inputError && (
-                    <View style={styles.errorIcon}>
-                      <Ionicons name="alert-circle" size={20} color="#ff3b30" />
-                    </View>
+                    <Text style={styles.errorText}>
+                      {t('betslip.oddLimitWarning')}
+                    </Text>
                   )}
                 </View>
-                {inputError && (
-                  <Text style={styles.errorText}>
-                    {t('betslip.oddLimitWarning')}
-                  </Text>
+
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.clearButton]}
+                    onPress={handleClear}
+                    disabled={isGenerating}
+                  >
+                    <Text style={styles.clearButtonText}>{t('betslip.clear')}</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[
+                      styles.button, 
+                      styles.generateButton,
+                      isGenerateButtonDisabled() && styles.generateButtonDisabled
+                    ]}
+                    onPress={handleGenerate}
+                    disabled={isGenerateButtonDisabled()}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <View style={styles.spinningIcon}>
+                          <Ionicons 
+                            name="sync" 
+                            size={20} 
+                            color="#FFFFFF" 
+                            style={{ transform: [{ rotate: `${rotation}deg` }] }}
+                          />
+                        </View>
+                        <Text style={styles.generateButtonText}>{t('betslip.generating')}</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Ionicons name="flash" size={20} color="#FFFFFF" />
+                        <Text style={styles.generateButtonText}>{t('betslip.generate')}</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+
+            {/* Results Section */}
+            <View style={styles.resultsSection}>
+              <View style={styles.resultsHeader}>
+                <Text style={styles.resultsTitle}>
+                  {t('betslip.generatedBetslips')} {betslips.length > 0 && `(${betslips.length})`}
+                </Text>
+                {!isAuthenticated && betslips.length > 0 && (
+                  <TouchableOpacity 
+                    style={styles.loginTipButton}
+                    onPress={() => {
+                      dismissKeyboard();
+                      setShowCreditModal(true);
+                    }}
+                  >
+                    <Ionicons name="log-in" size={14} color={theme.colors.accent} />
+                    <Text style={styles.loginTipText}>{t('betslip.loginToSave')}</Text>
+                  </TouchableOpacity>
                 )}
               </View>
 
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={[styles.button, styles.clearButton]}
-                  onPress={handleClear}
-                  disabled={isGenerating}
-                >
-                  <Text style={styles.clearButtonText}>{t('betslip.clear')}</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[
-                    styles.button, 
-                    styles.generateButton,
-                    !canGenerateBetslips() && styles.generateButtonDisabled
-                  ]}
-                  onPress={handleGenerate}
-                  disabled={isGenerating || inputError || !canGenerateBetslips()}
-                >
-                  {isGenerating ? (
-                    <>
-                      <View style={styles.spinningIcon}>
-                        <Ionicons 
-                          name="sync" 
-                          size={20} 
-                          color="#FFFFFF" 
-                          style={{ transform: [{ rotate: `${rotation}deg` }] }}
-                        />
-                      </View>
-                      <Text style={styles.generateButtonText}>{t('betslip.generating')}</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Ionicons name="flash" size={20} color="#FFFFFF" />
-                      <Text style={styles.generateButtonText}>{t('betslip.generate')}</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-
-          {/* Results Section */}
-          <View style={styles.resultsSection}>
-            <View style={styles.resultsHeader}>
-              <Text style={styles.resultsTitle}>
-                {t('betslip.generatedBetslips')} {betslips.length > 0 && `(${betslips.length})`}
-              </Text>
-              {!isAuthenticated && betslips.length > 0 && (
-                <TouchableOpacity 
-                  style={styles.loginTipButton}
-                  onPress={() => {
-                    dismissKeyboard();
-                    setShowCreditModal(true);
-                  }}
-                >
-                  <Ionicons name="log-in" size={14} color={theme.colors.accent} />
-                  <Text style={styles.loginTipText}>{t('betslip.loginToSave')}</Text>
-                </TouchableOpacity>
+              {isGenerating ? (
+                <View style={styles.loadingContainer}>
+                  <View style={[styles.loadingSpinner, { transform: [{ rotate: `${rotation}deg` }] }]}>
+                    <Ionicons name="football" size={40} color={theme.colors.accent} />
+                  </View>
+                  <Text style={styles.loadingText}>{t('betslip.aiAnalyzing')}</Text>
+                  <Text style={styles.loadingSubtext}>{t('betslip.mayTakeTime')}</Text>
+                </View>
+              ) : betslips.length > 0 ? (
+                <FlatList
+                  data={betslips}
+                  renderItem={renderBetslip}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.betslipsList}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={true}
+                  scrollEnabled={true}
+                />
+              ) : (
+                <TouchableWithoutFeedback onPress={dismissKeyboard}>
+                  <View style={styles.emptyState}>
+                    <Ionicons name="ticket" size={60} color={theme.colors.textMuted} />
+                    <Text style={styles.emptyStateTitle}>{t('betslip.noBetslipsYet')}</Text>
+                    <Text style={styles.emptyStateText}>
+                      {t('betslip.noBetslipsDescription')}
+                    </Text>
+                    <View style={styles.tipsContainer}>
+                      <Text style={styles.tipsTitle}>{t('betslip.tips.title')}</Text>
+                      <Text style={styles.tip}>{t('betslip.tips.targetOdds')}</Text>
+                      <Text style={styles.tip}>{t('betslip.tips.maxOdd')}</Text>
+                      <Text style={styles.tip}>{t('betslip.tips.aiConfidence')}</Text>
+                      <Text style={styles.tip}>{t('betslip.tips.successRate')}</Text>
+                      <Text style={styles.tip}>
+                        {isAuthenticated 
+                          ? hasFullAccess() 
+                            ? t('betslip.tips.proSubscription') 
+                            : t('betslip.tips.creditsNeeded', { credits: CREDITS_REQUIRED })
+                          : t('betslip.tips.loginToGenerate')
+                        }
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
               )}
             </View>
-
-            {isGenerating ? (
-              <View style={styles.loadingContainer}>
-                <View style={[styles.loadingSpinner, { transform: [{ rotate: `${rotation}deg` }] }]}>
-                  <Ionicons name="football" size={40} color={theme.colors.accent} />
-                </View>
-                <Text style={styles.loadingText}>{t('betslip.aiAnalyzing')}</Text>
-                <Text style={styles.loadingSubtext}>{t('betslip.mayTakeTime')}</Text>
-              </View>
-            ) : betslips.length > 0 ? (
-              <FlatList
-                data={betslips}
-                renderItem={renderBetslip}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.betslipsList}
-                keyboardShouldPersistTaps="handled"
-              />
-            ) : (
-              <TouchableWithoutFeedback onPress={dismissKeyboard}>
-                <View style={styles.emptyState}>
-                  <Ionicons name="ticket" size={60} color={theme.colors.textMuted} />
-                  <Text style={styles.emptyStateTitle}>{t('betslip.noBetslipsYet')}</Text>
-                  <Text style={styles.emptyStateText}>
-                    {t('betslip.noBetslipsDescription')}
-                  </Text>
-                  <View style={styles.tipsContainer}>
-                    <Text style={styles.tipsTitle}>{t('betslip.tips.title')}</Text>
-                    <Text style={styles.tip}>{t('betslip.tips.targetOdds')}</Text>
-                    <Text style={styles.tip}>{t('betslip.tips.maxOdd')}</Text>
-                    <Text style={styles.tip}>{t('betslip.tips.aiConfidence')}</Text>
-                    <Text style={styles.tip}>{t('betslip.tips.successRate')}</Text>
-                    <Text style={styles.tip}>
-                      {isAuthenticated 
-                        ? hasFullAccess() 
-                          ? t('betslip.tips.proSubscription') 
-                          : t('betslip.tips.creditsNeeded', { credits: CREDITS_REQUIRED })
-                        : t('betslip.tips.loginToGenerate')
-                      }
-                    </Text>
-                  </View>
-                </View>
-              </TouchableWithoutFeedback>
-            )}
           </View>
-        </View>
-        
-        {/* Credit Modal */}
-        {renderCreditModal()}
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+      
+      {/* Save Notification */}
+      {renderSaveNotification()}
+      
+      {/* Credit Modal */}
+      {renderCreditModal()}
+    </KeyboardAvoidingView>
   );
 };
 
@@ -742,6 +911,31 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '600',
+  },
+  // Save Notification Styles
+  saveNotification: {
+    position: 'absolute',
+    top: 20,
+    left: theme.spacing.lg,
+    right: theme.spacing.lg,
+    backgroundColor: '#34C759',
+    borderRadius: theme.borderRadius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    gap: 10,
+    zIndex: 1000,
+    ...theme.shadows.medium,
+  },
+  saveNotificationText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  saveNotificationClose: {
+    padding: 4,
   },
   inputSection: {
     backgroundColor: theme.colors.cardBackground,

@@ -468,7 +468,7 @@ export const createPayment = async (req, res) => {
           email: user.email, 
           userId: userId,
           externalId: transactionId,
-          message: `FootGpt Payment: ${plan.name}`,
+          message: `footai Payment: ${plan.name}`,
           // Webhook URL should be configured in Fapshi dashboard, not passed here
         };
 
@@ -528,12 +528,12 @@ export const createPayment = async (req, res) => {
         }
 
         // Add webhook URL for Lygos
-        const baseUrl = process.env.BASE_URL || 'https://your-app.com';
+        const baseUrl = process.env.BASE_URL || 'https://betai-backend-uxt5.onrender.com';
         
         const paymentData = {
           amount: finalAmount,
-          shop_name: "FootGpt",
-          message: `FootGpt Payment: ${plan.name}`,
+          shop_name: "footai",
+          message: `footai Payment: ${plan.name}`,
           success_url: `${process.env.FRONTEND_URL || baseUrl}/payment-success`,
           failure_url: `${process.env.FRONTEND_URL || baseUrl}/payment-failed`,
           order_id: transactionId,

@@ -15,20 +15,20 @@
     "ok": "OK"
   },
   "faqSection": {
-  "title": "Frequently Asked Questions",
-  "questions": [
-    "How do coins work?",
-    "Can I cancel my subscription?",
-    "What payment methods are accepted?",
-    "How do I get support?"
-  ],
-  "answers": {
-    "0": "Coins are our virtual currency used to generate AI-powered betslips (coupons). Each betslip generation costs 100 coins. When you purchase coin packages, you get a specific number of coins that can be used for generating predictions.",
-    "1": "Yes! You can cancel your subscription at any time. For subscriptions, simply go to your profile settings and select 'Cancel Subscription'. Your access will continue until the end of your current billing period. No hidden fees or questions asked.",
-    "2": "We accept various payment methods depending on your country. For African countries, we support mobile money (MTN, Orange, Airtel), bank transfers, and credit/debit cards. The specific available methods will be shown during checkout based on your selected country.",
-    "3": "For any questions or support needs, please contact us at freecoder21@gmail.com. Our support team is available 24/7 to assist you with payment issues, technical problems, or any other inquiries you may have."
-  }
-},
+    "title": "Frequently Asked Questions",
+    "questions": [
+      "How do coins work?",
+      "Can I cancel my subscription?",
+      "What payment methods are accepted?",
+      "How do I get support?"
+    ],
+    "answers": {
+      "0": "Coins are our virtual currency used to generate AI-powered betslips (coupons). Each betslip generation costs 100 coins. When you purchase coin packages, you get a specific number of coins that can be used for generating predictions.",
+      "1": "Yes! You can cancel your subscription at any time. For subscriptions, simply go to your profile settings and select 'Cancel Subscription'. Your access will continue until the end of your current billing period. No hidden fees or questions asked.",
+      "2": "We accept various payment methods depending on your country. For African countries, we support mobile money (MTN, Orange, Airtel), bank transfers, and credit/debit cards. The specific available methods will be shown during checkout based on your selected country.",
+      "3": "For any questions or support needs, please contact us at freecoder21@gmail.com. Our support team is available 24/7 to assist you with payment issues, technical problems, or any other inquiries you may have."
+    }
+  },
   "paywall": {
     "loading": "Loading paywall...",
     "authRequired": {
@@ -230,7 +230,7 @@
     },
     "footer": {
       "agreement": "By continuing, you agree to our Terms of Service and Privacy Policy.",
-      "copyright": "© 2025 FootGpt. All rights reserved."
+      "copyright": "© 2025 footai. All rights reserved."
     }
   },
   "betslip": {
@@ -312,7 +312,7 @@
       "live": "LIVE",
       "finished": "FINISHED"
     },
-     "card": {
+    "card": {
       "title": "AI Betslip #{id}",
       "match": "match",
       "matches": "matches",
@@ -371,7 +371,7 @@
     "helpSupport": "Help & Support",
     "termsConditions": "Terms & Conditions",
     "privacyPolicy": "Privacy Policy",
-    "aboutBetai": "About BetAI",
+    "aboutBetai": "About FootAI",
     "logout": "Logout",
     "logoutConfirm": "Are you sure you want to logout?",
     "logoutBtn": "Logout",
@@ -380,8 +380,8 @@
     "loginNow": "Login Now",
     "loadingProfile": "Loading profile...",
     "pleaseLoginView": "Please login to view your profile",
-    "version": "BetAI Assistant v1.0.0",
-    "copyright": "© 2024 BetAI. All rights reserved.",
+    "version": "FootAI Assistant v1.0.0",
+    "copyright": "© 2024 FootAI. All rights reserved.",
     "noSavedBetslipsAlert": "No Saved Betslips",
     "noSavedBetslipsMessage": "You haven't saved any betslips yet.",
     "removeBetslip": "Remove Betslip",
@@ -505,142 +505,141 @@
     "stats": {
       "loading": "Loading affiliate dashboard...",
       "useDemoData": "Use Demo Data"
-    }
-  },
-  "register": {
-    "title": "Become an Affiliate",
-    "affiliateProgram": "Affiliate Program",
-    "alreadyAffiliate": "You're Already an Affiliate!",
-    "yourPromoCode": "Your Promo Code",
-    "shareCodeHint": "Share this code with friends to earn commissions",
-    "viewDashboard": "View Dashboard",
-    "shareEarn": "Share & Earn",
-    "joinAffiliate": "Join FootGpt Affiliate Program",
-    "joinSubtitle": "Earn commissions by referring friends to FootGpt. Share your unique promo code and start earning today!",
-    "benefitsFeatures": "Benefits & Features",
-    "commissionStructure": "Commission Structure",
-    "yourUniquePromoCode": "Your Unique Promo Code",
-    "promoInstructions": "Create your unique promo code that your friends will use when signing up.",
-    "promoPlaceholder": "Enter your promo code (e.g., FootGpt123)",
-    "generate": "Generate",
-    "promoErrorEmpty": "Please enter a promo code",
-    "promoErrorLength": "Promo code must be at least 4 characters",
-    "promoErrorFormat": "Only uppercase letters and numbers allowed",
-    "promoValidHint": "Promo code looks good! Click \"Become an Affiliate\" to continue.",
-    "promoFormatHint": "Use 4-15 uppercase letters and numbers",
-    "examples": "Examples:",
-    "termsConditions": "Terms & Conditions",
-    "termsText": "By becoming a FootGpt Affiliate, you agree to:",
-    "term1": "Promote FootGpt in an ethical and legal manner",
-    "term2": "Not engage in spam or deceptive marketing practices",
-    "term3": "Receive commissions based on successful referrals",
-    "term4": "Payments are processed monthly via your preferred method",
-    "term5": "Minimum payout threshold: $50",
-    "becomeAffiliateBtn": "Become an Affiliate",
-    "cancel": "Cancel",
-    "validationError": "Validation Error",
-    "registrationFailed": "Registration Failed",
-    "congratulations": "Congratulations! 🎉",
-    "registrationSuccess": "You are now a FootGpt Affiliate!\n\nYou can start sharing your promo code and earning commissions.",
-    "viewDashboardBtn": "View Dashboard",
-    "done": "Done",
-    "authenticationRequired": "Authentication Required",
-    "pleaseLogin": "Please login to become an affiliate.",
-    "loading": "Loading...",
-    "benefits": {
-      "commission": {
-        "title": "10% Commission",
-        "description": "Earn 10% of your referrals' subscription fees"
-      },
-      "tracking": {
-        "title": "Real-time Tracking",
-        "description": "Track your referrals and earnings in real-time"
-      },
-      "dashboard": {
-        "title": "Affiliate Dashboard",
-        "description": "Access to exclusive affiliate dashboard with insights"
-      },
-      "bonus": {
-        "title": "Exclusive Bonuses",
-        "description": "Receive special bonuses for high performance"
-      },
-      "support": {
-        "title": "Priority Support",
-        "description": "Get priority support for affiliate-related queries"
-      },
-      "tools": {
-        "title": "Marketing Tools",
-        "description": "Access to promotional materials and tracking links"
-      }
     },
-    "commissionTiers": {
-      "basic": {
-        "name": "Basic Tier",
-        "rate": "10%",
-        "label": "on all referrals",
-        "requirement": "0+ referrals"
+    "register": {
+      "title": "Become an Affiliate",
+      "affiliateProgram": "Affiliate Program",
+      "alreadyAffiliate": "You're Already an Affiliate!",
+      "yourPromoCode": "Your Promo Code",
+      "shareCodeHint": "Share this code with friends to earn commissions",
+      "viewDashboard": "View Dashboard",
+      "shareEarn": "Share & Earn",
+      "joinAffiliate": "Join footai Affiliate Program",
+      "joinSubtitle": "Earn commissions by referring friends to footai. Share your unique promo code and start earning today!",
+      "benefitsFeatures": "Benefits & Features",
+      "commissionStructure": "Commission Structure",
+      "yourUniquePromoCode": "Your Unique Promo Code",
+      "promoInstructions": "Create your unique promo code that your friends will use when signing up.",
+      "promoPlaceholder": "Enter your promo code (e.g., footai123)",
+      "generate": "Generate",
+      "promoErrorEmpty": "Please enter a promo code",
+      "promoErrorLength": "Promo code must be at least 4 characters",
+      "promoErrorFormat": "Only uppercase letters and numbers allowed",
+      "promoValidHint": "Promo code looks good! Click \"Become an Affiliate\" to continue.",
+      "promoFormatHint": "Use 4-15 uppercase letters and numbers",
+      "examples": "Examples:",
+      "termsConditions": "Terms & Conditions",
+      "termsText": "By becoming a footai Affiliate, you agree to:",
+      "term1": "Promote footai in an ethical and legal manner",
+      "term2": "Not engage in spam or deceptive marketing practices",
+      "term3": "Receive commissions based on successful referrals",
+      "term4": "Payments are processed monthly via your preferred method",
+      "term5": "Minimum payout threshold: $50",
+      "becomeAffiliateBtn": "Become an Affiliate",
+      "cancel": "Cancel",
+      "validationError": "Validation Error",
+      "registrationFailed": "Registration Failed",
+      "congratulations": "Congratulations! 🎉",
+      "registrationSuccess": "You are now a footai Affiliate!\n\nYou can start sharing your promo code and earning commissions.",
+      "viewDashboardBtn": "View Dashboard",
+      "done": "Done",
+      "authenticationRequired": "Authentication Required",
+      "pleaseLogin": "Please login to become an affiliate.",
+      "loading": "Loading...",
+      "benefits": {
+        "commission": {
+          "title": "10% Commission",
+          "description": "Earn 10% of your referrals' subscription fees"
+        },
+        "tracking": {
+          "title": "Real-time Tracking",
+          "description": "Track your referrals and earnings in real-time"
+        },
+        "dashboard": {
+          "title": "Affiliate Dashboard",
+          "description": "Access to exclusive affiliate dashboard with insights"
+        },
+        "bonus": {
+          "title": "Exclusive Bonuses",
+          "description": "Receive special bonuses for high performance"
+        },
+        "support": {
+          "title": "Priority Support",
+          "description": "Get priority support for affiliate-related queries"
+        },
+        "tools": {
+          "title": "Marketing Tools",
+          "description": "Access to promotional materials and tracking links"
+        }
       },
-      "premium": {
-        "name": "Premium Tier",
-        "rate": "15%",
-        "label": "on all referrals",
-        "requirement": "10+ referrals"
-      },
-      "elite": {
-        "name": "Elite Tier",
-        "rate": "20%",
-        "label": "on all referrals",
-        "requirement": "50+ referrals"
+      "commissionTiers": {
+        "basic": {
+          "name": "Basic Tier",
+          "rate": "10%",
+          "label": "on all referrals",
+          "requirement": "0+ referrals"
+        },
+        "premium": {
+          "name": "Premium Tier",
+          "rate": "15%",
+          "label": "on all referrals",
+          "requirement": "10+ referrals"
+        },
+        "elite": {
+          "name": "Elite Tier",
+          "rate": "20%",
+          "label": "on all referrals",
+          "requirement": "50+ referrals"
+        }
       }
     }
   },
   "login": {
-  "welcomeBack": "Welcome Back",
-  "signInToAccount": "Sign in to your FootGpt account",
-  "emailAddress": "Email Address",
-  "enterEmail": "Enter your email",
-  "password": "Password",
-  "enterPassword": "Enter your password",
-  "forgotPassword": "Forgot Password?",
-  "signIn": "Sign In",
-  "or": "OR",
-  "noAccount": "Don't have an account? ",
-  "signUp": "Sign Up",
-  "enterCredentials": "Please enter both email and password",
-  "termsAgreement": "By signing in, you agree to our Terms & Privacy Policy"
-},
-"userRegistration": {
-  "createAccount": "Create Account",
-  "joinForSmarterBetting": "Join FootGpt for smarter betting",
-  "username": "Username *",
-  "chooseUsername": "Choose a username",
-  "emailAddress": "Email Address *",
-  "enterEmail": "Enter your email",
-  "password": "Password *",
-  "atLeast6Chars": "At least 6 characters",
-  "confirmPassword": "Confirm Password *",
-  "confirmYourPassword": "Confirm your password",
-  "referralCode": "Referral Code (Optional)",
-  "enterReferralCode": "Enter referral code if any",
-  "referralCodeHint": "Get bonus credits when you use a referral code",
-  "fillAllFields": "Please fill in all required fields",
-  "passwordsNoMatch": "Passwords do not match",
-  "passwordLength": "Password must be at least 6 characters long",
-  "registrationSuccess": "Registration successful! Welcome to FootGpt.",
-  "termsText": "By creating an account, you agree to our ",
-  "termsOfService": "Terms of Service ",
-  "and": "and ",
-  "privacyPolicy": "Privacy Policy",
-  "alreadyHaveAccount": "Already have an account?",
-  "signIn": "Sign In",
-  "continueAsGuest": "Continue as Guest",
-  "whyJoinFootGpt": "Why Join FootGpt?",
-  "aiPredictions": "AI Predictions",
-  "smartMatchAnalysis": "Smart match analysis",
-  "betslipGenerator": "Betslip Generator",
-  "customAccumulator": "Custom accumulator builder",
-  "freeCredits": "Free Credits",
-  "startWith100Credits": "Start with 100 free credits"
-}
-
+    "welcomeBack": "Welcome Back",
+    "signInToAccount": "Sign in to your footai account",
+    "emailAddress": "Email Address",
+    "enterEmail": "Enter your email",
+    "password": "Password",
+    "enterPassword": "Enter your password",
+    "forgotPassword": "Forgot Password?",
+    "signIn": "Sign In",
+    "or": "OR",
+    "noAccount": "Don't have an account? ",
+    "signUp": "Sign Up",
+    "enterCredentials": "Please enter both email and password",
+    "termsAgreement": "By signing in, you agree to our Terms & Privacy Policy"
+  },
+  "userRegistration": {
+    "createAccount": "Create Account",
+    "joinForSmarterBetting": "Join footai for smarter betting",
+    "username": "Username *",
+    "chooseUsername": "Choose a username",
+    "emailAddress": "Email Address *",
+    "enterEmail": "Enter your email",
+    "password": "Password *",
+    "atLeast6Chars": "At least 6 characters",
+    "confirmPassword": "Confirm Password *",
+    "confirmYourPassword": "Confirm your password",
+    "referralCode": "Referral Code (Optional)",
+    "enterReferralCode": "Enter referral code if any",
+    "referralCodeHint": "Get bonus credits when you use a referral code",
+    "fillAllFields": "Please fill in all required fields",
+    "passwordsNoMatch": "Passwords do not match",
+    "passwordLength": "Password must be at least 6 characters long",
+    "registrationSuccess": "Registration successful! Welcome to footai.",
+    "termsText": "By creating an account, you agree to our ",
+    "termsOfService": "Terms of Service ",
+    "and": "and ",
+    "privacyPolicy": "Privacy Policy",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "continueAsGuest": "Continue as Guest",
+    "whyJoinfootai": "Why Join footai?",
+    "aiPredictions": "AI Predictions",
+    "smartMatchAnalysis": "Smart match analysis",
+    "betslipGenerator": "Betslip Generator",
+    "customAccumulator": "Custom accumulator builder",
+    "freeCredits": "Free Credits",
+    "startWith100Credits": "Start with 100 free credits"
+  }
 }

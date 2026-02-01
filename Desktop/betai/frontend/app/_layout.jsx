@@ -46,15 +46,13 @@ function RootLayoutNav() {
       <Stack.Screen 
         name="(auth)/login" 
         options={{ 
-          headerTitle: 'Login',
-          headerTitleAlign: 'center',
+         headerShown: false
         }} 
       />
       <Stack.Screen 
         name="(auth)/register" 
         options={{ 
-          headerTitle: 'Register',
-          headerTitleAlign: 'center',
+         headerShown: false
         }} 
       />
       

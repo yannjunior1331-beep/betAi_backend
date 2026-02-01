@@ -7,6 +7,10 @@ import userRoutes from './src/routes/userRoutes.js'; // Import user routes
 import footballRoutes from './src/routes/footballRoutes.js';
 import affiliateRoutes from './src/routes/affiliateRoutes.js';
 import paymentRoutes from "./src/routes/paymentRoute.js";
+import cron from 'node-cron';
+import { exec } from 'child_process';
+import { fileURLToPath } from 'url';
+import path from 'path';
 dotenv.config();
 
 const app = express();
@@ -25,6 +29,23 @@ app.use("/api/payments", paymentRoutes);
 // Test route
 app.get('/api', (req, res) => {
   res.json({ message: 'Welcome to the API!' });
+});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const testScriptPath = path.join(__dirname, 'test.js');
+
+// Schedule test.js every 30 minutes
+cron.schedule('*/30 * * * *', () => {
+  console.log('🔄 Running test.js at', new Date());
+
+  exec(`node ${testScriptPath}`, (err, stdout, stderr) => {
+    if (err) {
+      console.error('❌ Error running test.js:', err);
+      return;
+    }
+    if (stdout) console.log('✅ Output:', stdout);
+    if (stderr) console.error('⚠️ Error output:', stderr);
+  });
 });
 
 // Start server

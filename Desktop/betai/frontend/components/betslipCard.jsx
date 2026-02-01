@@ -1,4 +1,4 @@
-// app/components/BetslipCard.jsx - Updated with i18n
+// app/components/BetslipCard.jsx - Updated with i18n and onSaveSuccess prop
 import React, { useState } from 'react';
 import {
   View,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { theme } from '../constants/theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -14,7 +15,7 @@ import { useAuth } from '../contexts/authContext';
 import { useTranslation } from 'react-i18next';
 import '../utils/i18n';
 
-const BetslipCard = ({ betslip }) => {
+const BetslipCard = ({ betslip, index, onSaveSuccess }) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -32,41 +33,42 @@ const BetslipCard = ({ betslip }) => {
     return theme.colors.lowProbability;
   };
 
-  // Function to format prediction for display - shows full prediction text
- // Update the formatPredictionForDisplay function:
-const formatPredictionForDisplay = (selection) => {
-  // If we have a full prediction text, use it
-  if (selection.fullPrediction) {
-    return selection.fullPrediction;
-  }
-  
-  // If we have prediction details, construct the full text
-  if (selection.predictionType && selection.predictionValue) {
-    const type = selection.predictionType.toUpperCase();
-    const value = selection.predictionValue;
-    
-    switch(type) {
-      case 'OVER':
-        return t('betslip.card.predictions.over', { value: value });
-      case 'UNDER':
-        return t('betslip.card.predictions.under', { value: value });
-      case 'BTTS':
-        return t('betslip.card.predictions.btts', { value: value === 'yes' ? t('common.yes') : t('common.no') });
-      case '1X2':
-        if (value === '1') return t('betslip.card.predictions.homeWin');
-        if (value === '2') return t('betslip.card.predictions.awayWin');
-        if (value === 'X') return t('betslip.card.predictions.draw');
-        return t('betslip.card.predictions.oneXTwo', { value: value });
-      case 'DC':
-        return t('betslip.card.predictions.doubleChance', { value: value });
-      default:
-        return selection.prediction || t('betslip.card.noPrediction');
+  // Update the formatPredictionForDisplay function:
+  const formatPredictionForDisplay = (selection) => {
+    // If we have a full prediction text, use it
+    if (selection.fullPrediction) {
+      return selection.fullPrediction;
     }
-  }
-  
-  // Fallback to just the prediction field
-  return selection.prediction || t('betslip.card.noPrediction');
-};
+    
+    // If we have prediction details, construct the full text
+    if (selection.predictionType && selection.predictionValue) {
+      const type = selection.predictionType.toUpperCase();
+      const value = selection.predictionValue;
+      
+      switch(type) {
+        case 'OVER':
+          return t('betslip.card.predictions.over', { value: value });
+        case 'UNDER':
+          return t('betslip.card.predictions.under', { value: value });
+        case 'BTTS':
+          return t('betslip.card.predictions.btts', { 
+            value: value === 'yes' ? t('common.yes') : t('common.no') 
+          });
+        case '1X2':
+          if (value === '1') return t('betslip.card.predictions.homeWin');
+          if (value === '2') return t('betslip.card.predictions.awayWin');
+          if (value === 'X') return t('betslip.card.predictions.draw');
+          return t('betslip.card.predictions.oneXTwo', { value: value });
+        case 'DC':
+          return t('betslip.card.predictions.doubleChance', { value: value });
+        default:
+          return selection.prediction || t('betslip.card.noPrediction');
+      }
+    }
+    
+    // Fallback to just the prediction field
+    return selection.prediction || t('betslip.card.noPrediction');
+  };
 
   const handleAddToBetslip = async () => {
     if (!isAuthenticated) {
@@ -131,21 +133,37 @@ const formatPredictionForDisplay = (selection) => {
       const result = await saveBetslip(betslipData);
       
       if (result.success) {
-        Alert.alert(
-          t('common.success'),
-          t('betslip.card.savedSuccess'),
-          [{ text: t('common.ok') }]
-        );
+        // ✅ Call parent's notification handler for consistent web/mobile notifications
+        if (onSaveSuccess) {
+          onSaveSuccess(t('betslip.card.savedSuccess'));
+        }
+        
+        // ✅ Also show native alert for mobile (it works well there)
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Alert.alert(
+            t('common.success'),
+            t('betslip.card.savedSuccess'),
+            [{ text: t('common.ok') }]
+          );
+        }
       } else {
         throw new Error(result.error || t('betslip.card.saveError'));
       }
     } catch (error) {
       console.error('Save betslip error:', error);
-      Alert.alert(
-        t('common.error'),
-        error.message || t('betslip.card.saveError'),
-        [{ text: t('common.ok') }]
-      );
+      
+      // Show error in both ways
+      if (onSaveSuccess) {
+        onSaveSuccess(error.message || t('betslip.card.saveError'));
+      }
+      
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        Alert.alert(
+          t('common.error'),
+          error.message || t('betslip.card.saveError'),
+          [{ text: t('common.ok') }]
+        );
+      }
     } finally {
       setIsSaving(false);
     }
