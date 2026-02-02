@@ -203,8 +203,9 @@ export const generateBetslips = async (req, res) => {
     const prompt = `TU ES UN EXPERT EN PARIS SPORTIFS FRANÇAIS. 
     TRÈS IMPORTANT : TOUS LES MARCHÉS DOIVENT ÊTRE EN FRANÇAIS SEULEMENT.
 
-    🎯 OBJECTIF PRINCIPAL : Créer exactement 5 billets de pari avec une cote totale de ${targetOddValue}
-    
+    🎯 OBJECTIF PRINCIPAL : Créer des billets de pari avec une cote totale de ${targetOdd}
+    📊 GÉNÈRE UN MINIMUM DE 5 BILLETS DE PARI DIFFÉRENTS
+
     ⚠️ CALCUL DES COTES - CE N'EST PAS UNE SUGGESTION, C'EST UNE RÈGLE :
     La cote totale d'un billet = PRODUIT des cotes individuelles
     Exemple : Si tu as 3 paris avec cotes 1.50, 1.80 et 2.00 → 1.50 × 1.80 × 2.00 = 5.40
@@ -212,19 +213,39 @@ export const generateBetslips = async (req, res) => {
 
     🕐 CONTRAINTE TEMPORELLE CRITIQUE :
     - N'UTILISE EXCLUSIVEMENT QUE LES MATCHS FUTURS FOURNIS DANS LES DONNÉES
-    - TOUS LES MATCHS FOURNIS SONT DÉJÀ DANS LE FUTUR
+    - TOUS LES MATCHS FOURNIS SONT DÉJÀ DANS LE FUTUR - PAS BESOIN DE FILTRER
+    - NE PROPOSE JAMAIS DE PARIS SUR DES MATCHS PASSÉS
 
-    📈 STRATÉGIE :
-    - Utilise 2 à 4 paris par billet
-    - Combine des paris sécurisés (cotes 1.10-1.60) avec quelques paris plus risqués (1.70-2.50)
-    - Varie les types de marchés
+    📈 STRATÉGIE POUR ATTEINDRE LA COTE ${targetOdd} :
+    1. Utilise 3 à 6 paris par billet sauf si la cote cible est très élevée alors utilise plus de paris
+    2. Combine uniquement des paris sécurisés (cotes comprises entre 1.10 et 1.50). Évite totalement les paris à cotes élevées ou risquées.
+    3. Tu PEUX utiliser le même match dans plusieurs billets avec des marchés différents
+    4. Tu PEUX utiliser plusieurs marchés du même match dans un seul billet
+    5. Varie les types de marchés pour diversifier les risques
+    6. Interdit d'utiliser de mettre un meme match avec le même marché dans un même billet
+
+    🔢 EXEMPLE DE CALCUL POUR CIBLE ${targetOdd} :
+    - Option 1 : 1.25 × 1.40 × 1.80 × 2.00 = 6.30
+    - Option 2 : 1.15 × 1.30 × 1.50 × 1.80 × 2.20 = 8.88
+    - Option 3 : 1.10 × 1.20 × 1.35 × 1.60 × 2.50 × 1.70 = 12.13
 
     🚫 MARCHÉS INTERDITS : Score exact, premier/marqueur, cartons, penalties
     ✅ MARCHÉS AUTORISÉS (en français seulement) :
     - "Plus de X buts" / "Moins de X buts"
-    - "Les deux équipes marquent" / "Une seule équipe marque"
+    - "Les deux équipes marquent" / "Une seule équipe marquent"
     - "Double chance : 1X" / "Double chance : X2" / "Double chance : 12"
-    - "Handicap asiatique +0.5" / "Handicap asiatique -1.5"
+    - "Handicap asiatique +0.5" / "Handicap asiatique -1.5" etc.
+    - "Remboursé si match nul"
+    - "Total buts"
+    - "Résultat mi-temps"
+    - "Corners total +8.5" / "Corners total -9.5"
+    - Mais priorize moins les buts totaux
+
+    🇫🇷 TOUS LES MARCHÉS DOIVENT ÊTRE EN FRANÇAIS
+    📊 Minimum 5 billets de pari COMPLETS
+    🎯 Cote totale DOIT être proche de ${targetOdd} (±20%)
+    🕐 TOUS LES MATCHS FOURNIS SONT DÉJÀ DANS LE FUTUR
+
 
     📋 EXEMPLE DE BILLET :
     {

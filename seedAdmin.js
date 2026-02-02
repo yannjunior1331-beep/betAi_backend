@@ -7,41 +7,46 @@ await connectDB();
 
 async function createTestUser() {
   try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: "cedrick@gmail.com" });
+    // ❗ Check if user already exists
+    const existingUser = await User.findOne({ email: "mike@gmail.com" });
+
     if (existingUser) {
       console.log("❌ User already exists:", existingUser.email);
       return;
     }
 
+    // 📅 Set subscription end date to 1 week from now
+    const oneWeekLater = new Date();
+    oneWeekLater.setDate(oneWeekLater.getDate() + 7);
+
+    // 👤 Create new user
     const user = new User({
-      username: "cedrick",
-      email: "cedrick@gmail.com",
-      password: "12345678", // will be hashed by pre-save middleware
-      subscription: "daily",
+      username: "mike",
+      email: "mike@gmail.com",
+      password: "123456", // will be hashed by pre-save middleware
+      subscription: "weekly",
       subscriptionStartDate: new Date(),
-      credits: 1000,
+      subscriptionEndDate: oneWeekLater,
+      credits: 5000
     });
 
     await user.save();
 
     console.log("✅ User created successfully!");
     console.log({
-      id: user._id,
       username: user.username,
       email: user.email,
       subscription: user.subscription,
-      credits: user.credits,
+      subscriptionEndDate: user.subscriptionEndDate,
+      credits: user.credits
     });
 
   } catch (error) {
     console.error("❌ Error creating user:", error);
   } finally {
     await mongoose.disconnect();
-    console.log("\nDatabase connection closed.");
     process.exit(0);
   }
 }
 
-// Run the function
 createTestUser();
